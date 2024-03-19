@@ -42,7 +42,7 @@
     * Application load balancer (ALB)
     * RDS - Postgres instances with HA + replication
 
-3 failure scenarios
+3. failure scenarios
     * DB failure
         + switch active-standby
         + delete active DB VM
