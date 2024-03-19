@@ -1,13 +1,13 @@
 ****************************** BROAD DISTRIBUTION ******************************
 ### Priority 1
-1. DB stuff
+1. DB stuff - *April* *Tanay*
     * postgres local setup on laptop
     * add db entry and all tables
     * python code for CRUD operations
         + which python package?
         + multiple table access
         + transaction code (to block other write operations on the row)
-2. CLI app for both staff and users
+2. CLI app for both staff and users - *Brian*
     * good for testing scenarios quickly
     * CLI application interface (menu driven)                   
     * HTTP client implementation
@@ -17,7 +17,10 @@
     * code partitioning
         + staff UI (billing)
         + user UI (view catalogue, points)
-3. API server
+    * group
+        + spend points?
+        + view group points
+3. API server - *David*
     * expose functionality (API)
         + billing
         + get data
@@ -29,14 +32,14 @@
             - which python package?
             - multiple table access
             - transaction code (to block other write operations on the row)
-4. Flask Server - CLI client integration & testing
+4. Flask Server - CLI client integration & testing - *Sakshi*
 
 ### Priority 2
 1. UI app using streamlit
     * easy to make
     * will make project look complex
 
-2. Cloud Infra setup
+2. Cloud Infra setup - *Sakshi*
     * Register for AWS free-tier
     * EC2 and Auto-scaling groups (ASG -> horizontal scaling)
     * Application load balancer (ALB)
