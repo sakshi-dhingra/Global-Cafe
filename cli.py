@@ -45,8 +45,9 @@ def make_transaction():
             break
         quantity = int(input("Enter quantity: "))
         items.append({"item_id": int(item_id), "quantity": quantity})
+        use_points = input("Use points? (y/n): ").lower() == 'y'
 
-    response = requests.post(f"{BASE_URL}/transaction", json={"user_id": user_id, "items": items})
+    response = requests.post(f"{BASE_URL}/transaction", json={"user_id": user_id, "items": items, "use_points": use_points})
     data = response.json()
     print(data)
 
