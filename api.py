@@ -5,6 +5,7 @@ import string
 app = Flask(__name__)
 
 MAX_GROUP_SIZE = 4
+POINTS_PERCENTAGE = 1
 
 # Dummy database
 groups = {}
@@ -33,7 +34,8 @@ def signup():
         groups[group_id] = {
             'group_name': group_name,
             'group_location': group_location,
-            'users': []
+            'users': [],
+            'points': 0
         }
         return jsonify({'group_id': group_id})
     
@@ -57,7 +59,8 @@ def signup():
         users[user_id] = {
             'user_name': user_name,
             'user_password': user_password,
-            'full_name': full_name
+            'full_name': full_name,
+            'group_id': group_id
         }
 
         return jsonify({'user_id': user_id})
@@ -86,7 +89,9 @@ def make_transaction():
     data = request.json
     user_id = data.get('user_id')
     items = data.get('items')
+    use_points = data.get('use_points')
 
+    # Calculate total cost.
     total_cost = 0
     for item in items:
         for menu_item in menu_items:
@@ -94,10 +99,22 @@ def make_transaction():
                 total_cost += menu_item['price'] * item['quantity']
                 break
 
-    discount_points = total_cost * 0.01
-    transactions.append({'user_id': user_id, 'total_cost': total_cost, 'discount_points': discount_points})
-
-    return jsonify({'total_cost': total_cost, 'discount_points': discount_points})
+    # Calculate points.
+    points = total_cost * (POINTS_PERCENTAGE / 100)
+    
+    # Spend or earn points.
+    group_id = users[user_id].get('group_id')
+    if use_points:
+        if groups[group_id].get('points') < points:
+            return jsonify({'error': 'Not enough points'}), 400
+        groups[group_id]['points'] -= points
+        total_cost -= points
+        transactions.append({'user_id': user_id, 'total_cost': total_cost, 'points': -points})
+        return jsonify({'total_cost': total_cost, 'points': -points})
+    
+    groups[group_id]['points'] += points
+    transactions.append({'user_id': user_id, 'total_cost': total_cost, 'points': points})
+    return jsonify({'total_cost': total_cost, 'points': points})
 
 
 @app.route('/transaction', methods=['GET'])
