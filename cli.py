@@ -3,15 +3,22 @@ import requests
 BASE_URL = 'http://localhost:5000'  # Update this with your server's URL
 
 
-def signup():
-    user_name = input("Enter username: ")
-    user_password = input("Enter password: ")
-    full_name = input("Enter full name: ")
-
-    response = requests.post(f"{BASE_URL}/signup", json={"user_name": user_name, "user_password": user_password, "full_name": full_name})
+def signup_group():
+    group_name = input("Enter group name: ")
+    group_location = input("Enter group location: ")
+    response = requests.post(f"{BASE_URL}/signup", json={"group_name": group_name, "group_location": group_location})
     data = response.json()
     print(data)
 
+def signup_user():
+    user_name = input("Enter username: ")
+    user_password = input("Enter password: ")
+    full_name = input("Enter full name: ")
+    group_id = input("Enter group ID: ")
+
+    response = requests.post(f"{BASE_URL}/signup", json={"user_name": user_name, "user_password": user_password, "full_name": full_name, "group_id": group_id})
+    data = response.json()
+    print(data)
 
 def login():
     user_name = input("Enter username: ")
@@ -61,27 +68,30 @@ def get_user():
 def main():
     while True:
         print("\nMenu:")
-        print("1. Signup")
-        print("2. Login")
-        print("3. Get Menu Items")
-        print("4. Make Transaction")
-        print("5. Get Transactions")
-        print("6. Get User")
+        print("1. Signup group")
+        print("2. Signup user")
+        print("3. Login")
+        print("4. Get Menu Items")
+        print("5. Make Transaction")
+        print("6. Get Transactions")
+        print("7. Get User")
         print("0. Exit")
 
         choice = input("Enter your choice: ")
 
         if choice == '1':
-            signup()
+            signup_group()
         elif choice == '2':
-            login()
+            signup_user()
         elif choice == '3':
-            get_menu_items()
+            login()
         elif choice == '4':
-            make_transaction()
+            get_menu_items()
         elif choice == '5':
-            get_transactions()
+            make_transaction()
         elif choice == '6':
+            get_transactions()
+        elif choice == '7':
             get_user()
         elif choice == '0':
             break

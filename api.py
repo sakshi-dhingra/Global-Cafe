@@ -4,7 +4,10 @@ import string
 
 app = Flask(__name__)
 
+MAX_GROUP_SIZE = 4
+
 # Dummy database
+groups = {}
 users = {}
 menu_items = [
     {"item_id": 1, "name": "Coffee", "price": 2.5},
@@ -14,26 +17,50 @@ menu_items = [
 
 transactions = []
 
-
-def generate_user_id():
+def generate_id():
     return ''.join(random.choices(string.ascii_letters + string.digits, k=6))
 
 
 @app.route('/signup', methods=['POST'])
 def signup():
     data = request.json
-    user_name = data.get('user_name')
-    user_password = data.get('user_password')
-    full_name = data.get('full_name')
 
-    user_id = generate_user_id()
-    users[user_id] = {
-        'user_name': user_name,
-        'user_password': user_password,
-        'full_name': full_name
-    }
+    # Group signup.
+    if data.get('group_name') is not None and data.get('group_location') is not None:
+        group_name = data.get('group_name')
+        group_location = data.get('group_location')
+        group_id = generate_id()
+        groups[group_id] = {
+            'group_name': group_name,
+            'group_location': group_location,
+            'users': []
+        }
+        return jsonify({'group_id': group_id})
+    
+    # User signup.
+    if data.get('user_name') is not None and data.get('group_id') is not None:
+        user_name = data.get('user_name')
+        user_password = data.get('user_password')
+        full_name = data.get('full_name')
+        group_id = data.get('group_id')
 
-    return jsonify({'user_id': user_id})
+        # Ensure group exists.
+        if group_id not in groups:
+            return jsonify({'error': 'Group not found'}), 404
+        # Ensure group is not full.
+        if len(groups[group_id].get('users')) >= MAX_GROUP_SIZE:
+            return jsonify({'error': 'Group is full'}), 400
+        
+        # Add user to group.
+        user_id = generate_id()
+        groups[group_id].get('users').append(user_id)
+        users[user_id] = {
+            'user_name': user_name,
+            'user_password': user_password,
+            'full_name': full_name
+        }
+
+        return jsonify({'user_id': user_id})
 
 
 @app.route('/login', methods=['POST'])
