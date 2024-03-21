@@ -58,6 +58,12 @@ def get_transactions():
     print(transactions)
 
 
+def get_group():
+    group_id = input("Enter group ID: ")
+    response = requests.get(f"{BASE_URL}/group?group_id={group_id}")
+    group = response.json()
+    print(group)
+
 def get_user():
     user_id = input("Enter user ID: ")
     response = requests.get(f"{BASE_URL}/user?user_id={user_id}")
@@ -74,7 +80,8 @@ def main():
         print("4. Get Menu Items")
         print("5. Make Transaction")
         print("6. Get Transactions")
-        print("7. Get User")
+        print("7. Get Group")
+        print("8. Get User")
         print("0. Exit")
 
         choice = input("Enter your choice: ")
@@ -92,6 +99,8 @@ def main():
         elif choice == '6':
             get_transactions()
         elif choice == '7':
+            get_group()
+        elif choice == '8':
             get_user()
         elif choice == '0':
             break

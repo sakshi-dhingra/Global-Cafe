@@ -106,6 +106,14 @@ def get_transactions():
     user_transactions = [transaction for transaction in transactions if transaction['user_id'] == user_id]
     return jsonify(user_transactions)
 
+@app.route('/group', methods=['GET'])
+def get_group():
+    group_id = request.args.get('group_id')
+    group = groups.get(group_id)
+    if group:
+        return jsonify(group)
+    else:
+        return jsonify({'error': 'Group not found'}), 404
 
 @app.route('/user', methods=['GET'])
 def get_user():
