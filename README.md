@@ -1,5 +1,12 @@
 # BROAD DISTRIBUTION
 
+
+| Symbol | Meaning |
+| --- | --- |
+| ❗ | pending |
+| 🟡 | in-progress |
+| ✅ | completed |
+
 ### Priority 1
 1. DB stuff - **April ,Tanay**
     * postgres local setup on laptop ✅
