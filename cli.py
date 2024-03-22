@@ -78,7 +78,7 @@ def make_transaction():
             break
         quantity = int(input("Enter quantity: "))
         items.append({"item_id": int(item_id), "quantity": quantity})
-        use_points = input("Use points? (y/n): ").lower() == 'y'
+        use_points = float(input("Redeem how many points: "))
 
     response = requests.post(f"{BASE_URL}/transaction",
                              json={
