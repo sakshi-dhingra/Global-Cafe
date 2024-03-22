@@ -1,41 +1,74 @@
+"""
+Simple CLI for interacting with the server.
+"""
 import requests
 
 BASE_URL = 'http://localhost:5000'  # Update this with your server's URL
 
-
 def signup_group():
+    """
+    Sign-up a group.
+    """
     group_name = input("Enter group name: ")
     group_location = input("Enter group location: ")
-    response = requests.post(f"{BASE_URL}/signup", json={"group_name": group_name, "group_location": group_location})
+    response = requests.post(f"{BASE_URL}/signup",
+                             json={
+                                 "group_name": group_name,
+                                 "group_location": group_location
+                                 })
     data = response.json()
     print(data)
 
+
 def signup_user():
+    """
+    Sign-up a user.
+    """
     user_name = input("Enter username: ")
     user_password = input("Enter password: ")
     full_name = input("Enter full name: ")
     group_id = input("Enter group ID: ")
 
-    response = requests.post(f"{BASE_URL}/signup", json={"user_name": user_name, "user_password": user_password, "full_name": full_name, "group_id": group_id})
+    response = requests.post(f"{BASE_URL}/signup",
+                             json={
+                                 "user_name": user_name,
+                                 "user_password": user_password,
+                                 "full_name": full_name,
+                                 "group_id": group_id
+                                 })
     data = response.json()
     print(data)
 
+
 def login():
+    """
+    Login as user.
+    """
     user_name = input("Enter username: ")
     user_password = input("Enter password: ")
 
-    response = requests.post(f"{BASE_URL}/login", json={"user_name": user_name, "user_password": user_password})
+    response = requests.post(f"{BASE_URL}/login",
+                             json={
+                                 "user_name": user_name,
+                                 "user_password": user_password
+                                 })
     data = response.json()
     print(data)
 
 
 def get_menu_items():
+    """
+    Get menu items.
+    """
     response = requests.get(f"{BASE_URL}/menu")
     menu_items = response.json()
     print(menu_items)
 
 
 def make_transaction():
+    """
+    Make a transaction.
+    """
     user_id = input("Enter user ID: ")
     items = []
 
@@ -47,12 +80,20 @@ def make_transaction():
         items.append({"item_id": int(item_id), "quantity": quantity})
         use_points = input("Use points? (y/n): ").lower() == 'y'
 
-    response = requests.post(f"{BASE_URL}/transaction", json={"user_id": user_id, "items": items, "use_points": use_points})
+    response = requests.post(f"{BASE_URL}/transaction",
+                             json={
+                                 "user_id": user_id,
+                                 "items": items,
+                                 "use_points": use_points
+                                 })
     data = response.json()
     print(data)
 
 
 def get_transactions():
+    """
+    Get transactions for a specified user.
+    """
     user_id = input("Enter user ID: ")
     response = requests.get(f"{BASE_URL}/transaction?user_id={user_id}")
     transactions = response.json()
@@ -60,12 +101,19 @@ def get_transactions():
 
 
 def get_group():
+    """
+    Get group details.
+    """
     group_id = input("Enter group ID: ")
     response = requests.get(f"{BASE_URL}/group?group_id={group_id}")
     group = response.json()
     print(group)
 
+
 def get_user():
+    """
+    Get user details.
+    """
     user_id = input("Enter user ID: ")
     response = requests.get(f"{BASE_URL}/user?user_id={user_id}")
     user = response.json()
@@ -73,6 +121,9 @@ def get_user():
 
 
 def main():
+    """
+    Main function.
+    """
     while True:
         print("\nMenu:")
         print("1. Signup group")
@@ -107,7 +158,6 @@ def main():
             break
         else:
             print("Invalid choice. Please try again.")
-
 
 if __name__ == "__main__":
     main()
