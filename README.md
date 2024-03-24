@@ -38,7 +38,7 @@
     * will make project look complex
 
 2. Cloud Infra setup - **Sakshi** ❗
-    * Register for AWS free-tier ❗
+    * Register for AWS free-tier ✅
     * EC2 and Auto-scaling groups (ASG -> horizontal scaling) ❗
     * Application load balancer (ALB) ❗
     * RDS - Postgres instances with HA + replication ❗
