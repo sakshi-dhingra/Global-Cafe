@@ -52,4 +52,18 @@
         + simulate high load on EC2 instance
         + turn off HTTP service in EC2 instance so ASG health-check fails and instance is replaced
     * Connection failure
-        + ???
+        + cli and server
+    * Consistency issues
+        + how/where is it implemented
+        + DB access
+        + order of requests
+        + double spending
+    * Region change
+        + Access through gateway
+    * Tokens
+        + no double spending
+        + check from which group tokens are spent
+    * Loads of requests from multiple clients
+        + demonstrate multiple clis and requests (maybe in a loop)
+    * Discounts
+        + customers not being able to avail an entitled discount
