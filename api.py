@@ -125,6 +125,14 @@ def make_transaction():
                 total_cost += menu_item['price'] * item['quantity']
                 break
 
+<<<<<<< HEAD
+=======
+    # Calculate points.
+    points = total_cost * (POINTS_PERCENTAGE / 100)
+
+    # call db - get users, groups
+    # call db - post transactions
+>>>>>>> 8107e0f (Added in CRUD operations)
     # Spend or earn points.
     group_id = users[user_id].get('group_id')
     
