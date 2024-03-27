@@ -104,7 +104,6 @@ def get_menu_items():
     menu_items = db.read_record(conn, "Catalogue")
     return jsonify(menu_items)
 
-
 @app.route('/transaction', methods=['POST'])
 def make_transaction():
     """
@@ -114,25 +113,19 @@ def make_transaction():
     user_id = data.get('user_id')
     items = data.get('items')
     use_points = data.get('use_points')
+    menu_items = db.read_record(conn, "Catalogue")
 
     # Calculate total cost.
     total_cost = 0
-
-    # call db - get menu_items
+  
+    print(items)
+    print(menu_items)
+    return
     for item in items:
         for menu_item in menu_items:
             if menu_item['item_id'] == item['item_id']:
                 total_cost += menu_item['price'] * item['quantity']
-                break
 
-<<<<<<< HEAD
-=======
-    # Calculate points.
-    points = total_cost * (POINTS_PERCENTAGE / 100)
-
-    # call db - get users, groups
-    # call db - post transactions
->>>>>>> 8107e0f (Added in CRUD operations)
     # Spend or earn points.
     group_id = users[user_id].get('group_id')
     
