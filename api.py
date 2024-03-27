@@ -4,17 +4,18 @@ Flask API server for the cafe loyalty card system.
 import random
 import string
 import psycopg2
-import db_operations as db
-
 from flask import Flask, request, jsonify
+import db_operations as db
 
 app = Flask(__name__)
 
-# 4
-MAX_GROUP_SIZE = 10000
+MAX_GROUP_SIZE = 4
 POINTS_PERCENTAGE = 1
 
-def connectToDB():
+def connect_to_db():
+    """
+    Create db connection
+    """
     try:
         connection = psycopg2.connect(host="localhost", port="5432", database="global_cafe", user="davidburton", password="")
         print("Connected to the database")
@@ -29,14 +30,16 @@ def generate_id():
     return ''.join(random.choices(string.ascii_letters + string.digits, k=6))
 
 @app.route('/signup/group', methods=['POST'])
-def groupSignUp():
+def group_sign_up():
+    """
+    Group signup method
+    """
     highest = db.read_record(conn, "user_groups", "group_id = (SELECT MAX(group_id) FROM user_groups);")
     columns = ["group_id", "discount_points", "number_members"]
-    highId = highest[0][0] + 1
-    values = [str(highId), '0', '0']
+    high_id = highest[0][0] + 1
+    values = [str(high_id), '0', '0']
     db.create_record(conn, 'user_groups', columns, values)
-                     
-    return jsonify({'Success':f'Group Created with id {highId}.'})
+    return jsonify({'Success':f'Group Created with id {high_id}.'})
 
 @app.route('/signup', methods=['POST'])
 def signup():
@@ -50,7 +53,7 @@ def signup():
         user_password = data.get('user_password')
         group_id = data.get('group_id')
         email = data.get('email')
-        groups = db.read_record(conn, "user_groups", "'" + group_id + "' = group_id") 
+        groups = db.read_record(conn, "user_groups", "'" + group_id + "' = group_id")
 
         # Ensure group exists.
         if int(group_id) is not int(groups[0][0]):
@@ -114,37 +117,49 @@ def make_transaction():
     items = data.get('items')
     use_points = data.get('use_points')
     menu_items = db.read_record(conn, "Catalogue")
+    user = db.read_record(conn, "users", "'" + user_id + "' = user_id")
+    user_group_id = user[0][4]
+    user_group = db.read_record(conn, "user_groups", "'" + str(user_group_id) + "' = group_id")
+    highest = db.read_record(conn, "transactions", "transaction_id = (SELECT MAX(transaction_id) FROM transactions);")
+    high_id = highest[0][0] + 1
+    group_points = float(user_group[0][1])
+
+    menu_items_use = [(t[0], float(t[2])) for t in menu_items]
 
     # Calculate total cost.
-    total_cost = 0
-  
-    print(items)
-    print(menu_items)
-    return
+    total_cost = 0.0
+
     for item in items:
-        for menu_item in menu_items:
-            if menu_item['item_id'] == item['item_id']:
-                total_cost += menu_item['price'] * item['quantity']
+        for menu_item in menu_items_use:
+            if menu_item[0] == item['item_id']:
+                total_cost += menu_item[1] * float(item['quantity'])
 
     # Spend or earn points.
-    group_id = users[user_id].get('group_id')
-    
     # no new points awarded when redeeming points
     if use_points:
-        if groups[group_id].get('points') < use_points:
+        if group_points < use_points:
             return jsonify({'error': 'Not enough points'}), 400
-        groups[group_id]['points'] -= use_points
+        group_points -= use_points
         total_cost -= use_points
-        transactions.append({'user_id': user_id, 'total_cost': total_cost, 'points': -use_points})
+        columns = ['transaction_id', 'total_amount', 'user_id', 'group_id', 'discounts_used']
+        values = [high_id, total_cost, user[0][0], user_group_id, -use_points]
+        db.create_record(conn, "transactions", columns, values)
+        new_points_total = {"discount_points" : group_points }
+        db.update_record(conn, "user_groups", new_points_total, "'" + str(user_group_id) + "' = group_id")
+
         return jsonify({'total_cost': total_cost, 'points': -use_points})
-    
     # points awarded if not redeeming
     else:
         # Calculate points.
         points = total_cost * (POINTS_PERCENTAGE / 100)
+        new_points = points + group_points
+        new_points_total = {"discount_points": new_points}
+        db.update_record(conn, "user_groups", new_points_total, "'" + str(user_group_id) + "' = group_id")
 
-        groups[group_id]['points'] += points
-        transactions.append({'user_id': user_id, 'total_cost': total_cost, 'points': points})
+        columns = ['transaction_id', 'total_amount', 'user_id', 'group_id', 'discounts_used']
+        values = [high_id, total_cost, user[0][0], user_group_id, 0]
+        db.create_record(conn, "transactions", columns, values)
+
         return jsonify({'total_cost': total_cost, 'points': points})
 
 
@@ -185,5 +200,5 @@ def get_user():
 
 
 if __name__ == '__main__':
-    conn = connectToDB()
+    conn = connect_to_db()
     app.run(debug=True)
