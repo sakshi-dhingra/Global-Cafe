@@ -12,12 +12,12 @@ app = Flask(__name__)
 MAX_GROUP_SIZE = 4
 POINTS_PERCENTAGE = 1
 
-def connect_to_db():
+def connect_to_db(host, port, database, user, password):
     """
     Create db connection
     """
     try:
-        connection = psycopg2.connect(host="localhost", port="5432", database="global_cafe", user="davidburton", password="")
+        connection = psycopg2.connect(host=host, port=port, database=database, user=user, password=password)
         print("Connected to the database")
         return connection
     except Exception as e:
@@ -200,5 +200,5 @@ def get_user():
 
 
 if __name__ == '__main__':
-    conn = connect_to_db()
+    conn = connect_to_db(host="localhost", port="5432", database="global_cafe", user="davidburton", password="")
     app.run(debug=True)
