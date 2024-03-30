@@ -8,7 +8,6 @@
 | ✅ | completed |
 
 ## PART I
-
 1. DB stuff - **April ,Tanay**
     * postgres local setup on laptop ✅
     * add db entry and all tables ✅
