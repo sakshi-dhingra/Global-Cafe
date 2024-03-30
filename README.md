@@ -48,22 +48,24 @@
 ## PART II
 
 3. ### failure scenarios 
-DB failure scenarios - **Sakshi**
-    * DB failure 
+    
+* DB failure scenarios - **Sakshi**
+
+    DB failure 
         + switch active-standby
         + stop active DB instance
-    * Server failure & load 
+    Server failure & load 
         + stop EC2 instance for API server
         + simulate high load on EC2 instance
         + turn off HTTP service in EC2 instance so ASG health-check fails and instance is replaced
-    * Connection failure
+    Connection failure
         + cli and server
-    * Consistency issues
+    Consistency issues
         + how/where is it implemented
         + DB access
         + order of requests
         + double spending
-    * Region change
+    Region change
         + Access through gateway 
 
 
