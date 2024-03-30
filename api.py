@@ -119,22 +119,26 @@ def make_transaction():
                 total_cost += menu_item['price'] * item['quantity']
                 break
 
-    # Calculate points.
-    points = total_cost * (POINTS_PERCENTAGE / 100)
-
     # Spend or earn points.
     group_id = users[user_id].get('group_id')
+    
+    # no new points awarded when redeeming points
     if use_points:
-        if groups[group_id].get('points') < points:
+        if groups[group_id].get('points') < use_points:
             return jsonify({'error': 'Not enough points'}), 400
-        groups[group_id]['points'] -= points
-        total_cost -= points
-        transactions.append({'user_id': user_id, 'total_cost': total_cost, 'points': -points})
-        return jsonify({'total_cost': total_cost, 'points': -points})
+        groups[group_id]['points'] -= use_points
+        total_cost -= use_points
+        transactions.append({'user_id': user_id, 'total_cost': total_cost, 'points': -use_points})
+        return jsonify({'total_cost': total_cost, 'points': -use_points})
+    
+    # points awarded if not redeeming
+    else:
+        # Calculate points.
+        points = total_cost * (POINTS_PERCENTAGE / 100)
 
-    groups[group_id]['points'] += points
-    transactions.append({'user_id': user_id, 'total_cost': total_cost, 'points': points})
-    return jsonify({'total_cost': total_cost, 'points': points})
+        groups[group_id]['points'] += points
+        transactions.append({'user_id': user_id, 'total_cost': total_cost, 'points': points})
+        return jsonify({'total_cost': total_cost, 'points': points})
 
 
 @app.route('/transaction', methods=['GET'])
