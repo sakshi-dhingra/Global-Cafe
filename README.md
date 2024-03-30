@@ -124,3 +124,5 @@ COMMIT TRANSACTION;
 
 4. CLI: add another ques in cli - what is your home region?  - assign user id based on this - '001-<>' for R1 '002-<>' for R2, '003-<>' for R3. 
 
+  
+  
