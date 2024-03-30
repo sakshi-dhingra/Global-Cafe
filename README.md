@@ -8,8 +8,6 @@
 | ✅ | completed |
 
 ## PART I
-
-
 1. DB stuff - **April ,Tanay**
     * postgres local setup on laptop ✅
     * add db entry and all tables ✅
@@ -72,7 +70,25 @@
     + no double spending
     + check from which group tokens are spent
 
-* Loads of requests from multiple clients **Brian/April**
+    + Transaction update lock for group points (eg, below)
+
+```
+BEGIN TRANSACTION;
+ 
+-- Set appropriate isolation level
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+ 
+-- Select the record with appropriate locks
+SELECT * FROM YourTable WITH (UPDLOCK, HOLDLOCK) WHERE YourCondition;
+ 
+-- Perform your operations on the record
+-- UPDATE YourTable SET ... WHERE YourCondition;
+ 
+-- Commit the transaction
+COMMIT TRANSACTION;
+```
+
+* Loads of requests from multiple clients **Brian**
     + demonstrate multiple clis and requests (maybe in a loop)
     + script to create 20 users and 5 groups - to keep transactions ongoing.
     + keep testing consistency as part of script
@@ -82,8 +98,9 @@
 
 -------------------------------------------
 
-### Changes in API and CLI - (April/Brian/David)
+### Changes in API and CLI 
 
+ **April**
 1. CLI: Group id field in user's table should be replaced by Groups which will be a list of groups user is part of.
 
 ```
@@ -105,20 +122,4 @@
 
 4. CLI: add another ques in cli - what is your home region?  - assign user id based on this - '001-<>' for R1 '002-<>' for R2, '003-<>' for R3. 
 
-5. Transaction update lock for group points (eg, below)
-
-```
-BEGIN TRANSACTION;
- 
--- Set appropriate isolation level
-SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
- 
--- Select the record with appropriate locks
-SELECT * FROM YourTable WITH (UPDLOCK, HOLDLOCK) WHERE YourCondition;
- 
--- Perform your operations on the record
--- UPDATE YourTable SET ... WHERE YourCondition;
- 
--- Commit the transaction
-COMMIT TRANSACTION;
-```
+  
