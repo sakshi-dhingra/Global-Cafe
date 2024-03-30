@@ -58,30 +58,27 @@
         + stop active DB instance
     - Server failure & load 
         + stop EC2 instance for API server
-        + simulate high load on EC2 instance
         + turn off HTTP service in EC2 instance so ASG health-check fails and instance is replaced
     - Connection failure
         + cli and server
     - Consistency issues
         + how/where is it implemented
-        + DB access
-        + order of requests
-        + double spending
+        + DB access, order of requests
     - Region change
         + Access through gateway 
 
 
 * Tokens - **David** 
-        + no double spending
-        + check from which group tokens are spent
+    + no double spending
+    + check from which group tokens are spent
 
 * Loads of requests from multiple clients **Brian/April**
-        + demonstrate multiple clis and requests (maybe in a loop)
-        + script to create 20 users and 5 groups - to keep transactions ongoing.
-        + keep testing consistency as part of script
+    + demonstrate multiple clis and requests (maybe in a loop)
+    + script to create 20 users and 5 groups - to keep transactions ongoing.
+    + keep testing consistency as part of script
 
 * Discounts **will see afterwards**
-        + customers not being able to avail an entitled discount
+    + customers not being able to avail an entitled discount
 
 -------------------------------------------
 
