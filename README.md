@@ -69,7 +69,7 @@
         + Access through gateway 
 
 
-* Tokens - **David**
+* Tokens - **David** 
         + no double spending
         + check from which group tokens are spent
 
