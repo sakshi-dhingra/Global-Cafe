@@ -3,19 +3,17 @@ Simple CLI for interacting with the server.
 """
 import requests
 
-BASE_URL = 'http://localhost:5000'  # Update this with your server's URL
+BASE_URL = 'http://127.0.0.1:5000'  # Update this with your server's URL
 
 def signup_group():
     """
     Sign-up a group.
     """
-    group_name = input("Enter group name: ")
-    group_location = input("Enter group location: ")
-    response = requests.post(f"{BASE_URL}/signup",
-                             json={
-                                 "group_name": group_name,
-                                 "group_location": group_location
-                                 })
+    # group_name = input("Enter group name: ")
+    # group_location = input("Enter group location: ")
+
+    response = requests.post(f"{BASE_URL}/signup/group",
+                             json={})
     data = response.json()
     print(data)
 
@@ -25,6 +23,7 @@ def signup_user():
     Sign-up a user.
     """
     user_name = input("Enter username: ")
+    email = input("Enter email: ")
     user_password = input("Enter password: ")
     full_name = input("Enter full name: ")
     group_id = input("Enter group ID: ")
@@ -32,6 +31,7 @@ def signup_user():
     response = requests.post(f"{BASE_URL}/signup",
                              json={
                                  "user_name": user_name,
+                                 "email": email,
                                  "user_password": user_password,
                                  "full_name": full_name,
                                  "group_id": group_id
