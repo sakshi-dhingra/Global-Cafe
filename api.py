@@ -3,7 +3,7 @@ Flask API server for the cafe loyalty card system.
 """
 import random
 import string
-import mysql.connector
+import psycopg2
 from flask import Flask, request, jsonify
 import db_operations as db
 
@@ -17,7 +17,7 @@ def connect_to_db(host, port, database, user, password):
     Create db connection
     """
     try:
-        connection = mysql.connector.connect(host=host, port=port, database=database, user=user, password=password)
+        connection = psycopg2.connect(host=host, port=port, database=database, user=user, password=password)
         print("Connected to the database")
         return connection
     except Exception as e:
