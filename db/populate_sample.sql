@@ -9,18 +9,28 @@ VALUES
 -- Populate Users table
 INSERT INTO Users (user_id, username, email, pswd, group_id) 
 VALUES 
-    ('1aaaaa', 'mary', 'mary@gmail.com', 'password1', 1),
-    ('2bbbbb', 'john', 'john@gmail.com', 'password2', 1),
-    ('3ccccc', 'tom', 'tom@gmail.com', 'password3', 2),
-    ('4ddddd', 'sam', 'sam@gmail.com', 'password4', 2),
-	('5eeeee', 'joe', 'joe@gmail.com', 'password5', 2),
-	('6fffff', 'kate', 'kate@gmail.com', 'password6', 2);
+    ('001-1aaaaa', 'mary', 'mary@gmail.com', 'password1', 1),
+    ('002-2bbbbb', 'john', 'john@gmail.com', 'password2', 1),
+    ('001-3ccccc', 'tom', 'tom@gmail.com', 'password3', 2),
+    ('003-4ddddd', 'sam', 'sam@gmail.com', 'password4', 2),
+	('002-5eeeee', 'joe', 'joe@gmail.com', 'password5', 2),
+	('001-6fffff', 'kate', 'kate@gmail.com', 'password6', 2);
+
+-- Populate Group_Members table
+INSERT INTO Group_Members (group_id, user_id)
+VALUES
+    (1, '001-1aaaaa'),
+    (1, '002-2bbbbb'),
+    (2, '001-3ccccc'),
+    (2, '003-4ddddd'),
+	(2, '002-5eeeee'),
+	(2, '001-6fffff');
 
 -- Populate Transactions table
 INSERT INTO Transactions (transaction_id, total_amount, user_id, group_id, discounts_used) 
 VALUES 
-    (1, 20.00,'1aaaaa', 1, 5.00),
-    (2, 30.00,'2bbbbb', 2, 10.00);
+    (1, 20.00,'001-1aaaaa', 1, 5.00),
+    (2, 30.00,'002-2bbbbb', 2, 10.00);
 
 -- Populate Catalogue table
 INSERT INTO Catalogue (item_id, item_name, item_price) 

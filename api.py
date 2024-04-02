@@ -53,6 +53,7 @@ def signup():
         user_password = data.get('user_password')
         group_id = data.get('group_id')
         email = data.get('email')
+        location = data.get('location')
         groups = db.read_record(conn, "user_groups", "'" + group_id + "' = group_id")
 
         # Ensure group exists.
@@ -64,7 +65,7 @@ def signup():
         if groups[0][2] >= MAX_GROUP_SIZE:
             return jsonify({'error': 'Group is full'}), 400
 
-        user_id = generate_id()
+        user_id = location + ''+ generate_id()
         updated_group_members = {"number_members": int(groups[0][2]) + 1}
 
         # User group tally updated
@@ -75,9 +76,54 @@ def signup():
         values = [user_id, user_name, email, user_password, group_id]
         db.create_record(conn, "Users", columns, values)
 
+        #Update group_members table
+        columns = ["group_id", "user_id"]
+        values = [group_id, user_id]
+        db.create_record(conn, "Group_Members", columns, values)
+
         return jsonify({'user_id': user_id})
     return jsonify({'error': 'Invalid data'}), 400
 
+@app.route('/join_group', methods=['POST'])
+def join_group():
+    """
+    Join a group.
+    """
+    data = request.json
+
+    if data.get('user_id') is not None and data.get('group_id') is not None:
+        group_id = data.get('group_id')
+        user_id = data.get('user_id')
+        groups = db.read_record(conn, "user_groups", "'" + group_id + "' = group_id")
+        users = db.read_record(conn, "users", "'" + user_id +"'")
+
+        # Ensure user exists.
+        if user_id is not int(users[0][0]):
+            print(user_id)
+            print(users[0][0])
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Ensure group exists.
+        if int(group_id) is not int(groups[0][0]):
+            print(group_id)
+            print(groups[0][0])
+            return jsonify({'error': 'Group not found'}), 404
+        # Ensure group is not full.
+        if groups[0][2] >= MAX_GROUP_SIZE:
+            return jsonify({'error': 'Group is full'}), 400
+
+        updated_group_members = {"number_members": int(groups[0][2]) + 1}
+
+        # User group tally updated
+        db.update_record(conn, "User_Groups", updated_group_members, "'" + group_id + "' = group_id")
+
+        #Update group_members table
+        columns = ["group_id", "user_id"]
+        values = [group_id, user_id]
+        db.create_record(conn, "Group_Members", columns, values)
+
+        return jsonify({'user_id': user_id, 'group_id': group_id})
+    return jsonify({'error': 'Invalid data'}), 400
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -200,5 +246,5 @@ def get_user():
 
 
 if __name__ == '__main__':
-    conn = connect_to_db(host="localhost", port="5432", database="global_cafe", user="davidburton", password="")
+    conn = connect_to_db(host="localhost", port="5432", database="global_cafe", user="postgres", password="postgres")
     app.run(debug=True)
