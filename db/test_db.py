@@ -1,7 +1,7 @@
-import psycopg2
+import mysql.connector
 
 try:
-    connection = psycopg2.connect(host="localhost", port="5432", 
+    connection = mysql.connector.connect(host="localhost", port="5432", 
                     database="global_cafe", user="postgres", password="postgres")
     crsr = connection.cursor()
     print("Connected to the database")
