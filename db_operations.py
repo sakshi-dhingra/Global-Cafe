@@ -1,5 +1,5 @@
-import psycopg2
-from psycopg2 import Error
+import mysql.connector
+from mysql.connector import Error
 
 def execute_query(connection, query, values=None):
     """
