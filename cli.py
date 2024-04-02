@@ -91,6 +91,7 @@ def make_transaction():
     Make a transaction.
     """
     user_id = input("Enter user ID: ")
+    group_id = input("Enter Group ID: ")
     items = []
 
     while True:
@@ -104,6 +105,7 @@ def make_transaction():
     response = requests.post(f"{BASE_URL}/transaction",
                              json={
                                  "user_id": user_id,
+                                 "group_id": group_id,
                                  "items": items,
                                  "use_points": use_points
                                  })

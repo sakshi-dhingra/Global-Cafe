@@ -164,7 +164,13 @@ def make_transaction():
     use_points = data.get('use_points')
     menu_items = db.read_record(conn, "Catalogue")
     user = db.read_record(conn, "users", "'" + user_id + "' = user_id")
-    user_group_id = user[0][4]
+    
+    user_group_id = data.get('group_id')
+    groups = db.read_record(conn, "Group_Members", "'" + user_id + "' = user_id")
+    if not groups:
+        return jsonify({'error': 'User not in this group or group does not exist'}), 401
+
+
     user_group = db.read_record(conn, "user_groups", "'" + str(user_group_id) + "' = group_id")
     highest = db.read_record(conn, "transactions", "transaction_id = (SELECT MAX(transaction_id) FROM transactions);")
     high_id = highest[0][0] + 1
