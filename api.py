@@ -252,5 +252,5 @@ def get_user():
 
 
 if __name__ == '__main__':
-    conn = connect_to_db(host="localhost", port="5432", database="global_cafe", user="postgres", password="postgres")
+    conn = connect_to_db(host="localhost", port="5432", database="global_cafe", user="davidburton", password="")
     app.run(debug=True)
