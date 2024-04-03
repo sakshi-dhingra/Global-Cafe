@@ -39,7 +39,7 @@ def group_sign_up():
     high_id = highest[0][0] + 1
     values = [str(high_id), '0', '0']
     db.create_record(conn, 'user_groups', columns, values)
-    return jsonify({'Success':f'Group Created with id {high_id}.'})
+    return jsonify({'group_id': high_id})
 
 @app.route('/signup', methods=['POST'])
 def signup():
@@ -54,7 +54,7 @@ def signup():
         group_id = data.get('group_id')
         email = data.get('email')
         location = data.get('location')
-        groups = db.read_record(conn, "user_groups", "'" + group_id + "' = group_id")
+        groups = db.read_record(conn, "user_groups", f"group_id={group_id}")
 
         # Ensure group exists.
         if int(group_id) is not int(groups[0][0]):
@@ -65,11 +65,11 @@ def signup():
         if groups[0][2] >= MAX_GROUP_SIZE:
             return jsonify({'error': 'Group is full'}), 400
 
-        user_id = location + ''+ generate_id()
+        user_id = f'{location}{generate_id()}'
         updated_group_members = {"number_members": int(groups[0][2]) + 1}
 
         # User group tally updated
-        db.update_record(conn, "User_Groups", updated_group_members, "'" + group_id + "' = group_id")
+        db.update_record(conn, "user_groups", updated_group_members, f"group_id={group_id}")
 
         # Create user
         columns = ["user_id", "username", "email", "pswd", "group_id"]
@@ -94,11 +94,15 @@ def join_group():
     if data.get('user_id') is not None and data.get('group_id') is not None:
         group_id = data.get('group_id')
         user_id = data.get('user_id')
-        groups = db.read_record(conn, "user_groups", "'" + group_id + "' = group_id")
-        users = db.read_record(conn, "users", "'" + user_id +"'")
+        groups = db.read_record(conn, "user_groups", f"group_id={group_id}")
+        if len(groups) == 0:
+            return jsonify({'error': 'Group not found'}), 404
+        users = db.read_record(conn, "users", f"user_id='{user_id}'")
+        if len(users) == 0:
+            return jsonify({'error': 'User not found'}), 404
 
         # Ensure user exists.
-        if user_id is not int(users[0][0]):
+        if user_id != users[0][0]:
             print(user_id)
             print(users[0][0])
             return jsonify({'error': 'User not found'}), 404
@@ -115,7 +119,7 @@ def join_group():
         updated_group_members = {"number_members": int(groups[0][2]) + 1}
 
         # User group tally updated
-        db.update_record(conn, "User_Groups", updated_group_members, "'" + group_id + "' = group_id")
+        db.update_record(conn, "User_Groups", updated_group_members, f"group_id={group_id}")
 
         #Update group_members table
         columns = ["group_id", "user_id"]
@@ -160,18 +164,17 @@ def make_transaction():
     """
     data = request.json
     user_id = data.get('user_id')
+    group_id = data.get('group_id')
     items = data.get('items')
     use_points = data.get('use_points')
     menu_items = db.read_record(conn, "Catalogue")
-    user = db.read_record(conn, "users", "'" + user_id + "' = user_id")
-    
-    user_group_id = data.get('group_id')
-    groups = db.read_record(conn, "Group_Members", "'" + user_id + "' = user_id")
+    user = db.read_record(conn, "users", f"user_id='{user_id}'")
+    groups = db.read_record(conn, "group_members", f"user_id='{user_id}' AND group_id={group_id}")
     if not groups:
-        return jsonify({'error': 'User not in this group or group does not exist'}), 401
+        return jsonify({'error': f'User {user_id} not in group {group_id}'}), 401
 
 
-    user_group = db.read_record(conn, "user_groups", "'" + str(user_group_id) + "' = group_id")
+    user_group = db.read_record(conn, "user_groups", f"group_id={str(group_id)}")
     highest = db.read_record(conn, "transactions", "transaction_id = (SELECT MAX(transaction_id) FROM transactions);")
     high_id = highest[0][0] + 1
     group_points = float(user_group[0][1])
@@ -194,10 +197,10 @@ def make_transaction():
         group_points -= use_points
         total_cost -= use_points
         columns = ['transaction_id', 'total_amount', 'user_id', 'group_id', 'discounts_used']
-        values = [high_id, total_cost, user[0][0], user_group_id, -use_points]
+        values = [high_id, total_cost, user[0][0], group_id, -use_points]
         db.create_record(conn, "transactions", columns, values)
         new_points_total = {"discount_points" : group_points }
-        db.update_record(conn, "user_groups", new_points_total, "'" + str(user_group_id) + "' = group_id")
+        db.update_record(conn, "user_groups", new_points_total, "'" + str(group_id) + "' = group_id")
 
         return jsonify({'total_cost': total_cost, 'points': -use_points})
     # points awarded if not redeeming
@@ -206,10 +209,10 @@ def make_transaction():
         points = total_cost * (POINTS_PERCENTAGE / 100)
         new_points = points + group_points
         new_points_total = {"discount_points": new_points}
-        db.update_record(conn, "user_groups", new_points_total, "'" + str(user_group_id) + "' = group_id")
+        db.update_record(conn, "user_groups", new_points_total, "'" + str(group_id) + "' = group_id")
 
         columns = ['transaction_id', 'total_amount', 'user_id', 'group_id', 'discounts_used']
-        values = [high_id, total_cost, user[0][0], user_group_id, 0]
+        values = [high_id, total_cost, user[0][0], group_id, 0]
         db.create_record(conn, "transactions", columns, values)
 
         return jsonify({'total_cost': total_cost, 'points': points})
