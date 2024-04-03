@@ -61,4 +61,34 @@ def delete_record(connection, table, condition):
     """
     query = f"DELETE FROM {table} WHERE {condition}"
     execute_query(connection, query)
-    
+
+def transaction_record(connection, insert_table, insert_columns, insert_values, update_table, update_values, update_condition):
+    """
+    DB transaction
+    """
+    query = "START TRANSACTION;"
+
+    insert_query = f"INSERT INTO {insert_table} ({', '.join(insert_columns)}) VALUES ({', '.join(['%s' for _ in insert_values])})"
+    query += insert_query
+
+    update_query = f"UPDATE {update_table} SET {', '.join([f'{col} = %s' for col in update_values.keys()])} WHERE {update_condition}"
+    # values = list(updateValues.values())
+    query += update_query
+
+    query += "COMMIT;"
+
+    transaction_commit(connection, query)
+
+
+def transaction_commit(connection, query):
+    """
+    Commit transaction
+    """
+    try:
+        cursor = connection.cursor()
+        cursor.execute(query)
+        connection.commit()
+        print("Transaction committed successfully")
+    except Error as e:
+        print("Error committing transaction:", e)
+        connection.rollback()
