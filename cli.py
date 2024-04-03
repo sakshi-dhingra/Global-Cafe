@@ -27,6 +27,16 @@ def signup_user():
     user_password = input("Enter password: ")
     full_name = input("Enter full name: ")
     group_id = input("Enter group ID: ")
+    location = input("Enter your Home Region (R1, R2 or R3): ")
+
+    if location == 'R1':
+        location = "001-"
+    elif location == 'R2':
+        location = "002-"
+    elif location == 'R3':
+        location = "003-"
+    else:
+        location = "001-"
 
     response = requests.post(f"{BASE_URL}/signup",
                              json={
@@ -34,11 +44,22 @@ def signup_user():
                                  "email": email,
                                  "user_password": user_password,
                                  "full_name": full_name,
-                                 "group_id": group_id
+                                 "group_id": group_id,
+                                 "location": location
                                  })
     data = response.json()
     print(data)
 
+def join_group():
+    user_id = input("Enter user id: ")
+    group_id = input("Enter group id you wish to join: ")
+    response = requests.post(f"{BASE_URL}/join_group",
+                             json={
+                                 "user_id": user_id,
+                                 "group_id": group_id
+                                 })
+    data = response.json()
+    print(data)
 
 def login():
     """
@@ -70,6 +91,7 @@ def make_transaction():
     Make a transaction.
     """
     user_id = input("Enter user ID: ")
+    group_id = input("Enter Group ID: ")
     items = []
 
     while True:
@@ -83,6 +105,7 @@ def make_transaction():
     response = requests.post(f"{BASE_URL}/transaction",
                              json={
                                  "user_id": user_id,
+                                 "group_id": group_id,
                                  "items": items,
                                  "use_points": use_points
                                  })
@@ -134,6 +157,7 @@ def main():
         print("6. Get Transactions")
         print("7. Get Group")
         print("8. Get User")
+        print("9. Join a Group")
         print("0. Exit")
 
         choice = input("Enter your choice: ")
@@ -154,6 +178,8 @@ def main():
             get_group()
         elif choice == '8':
             get_user()
+        elif choice == '9':
+            join_group()
         elif choice == '0':
             break
         else:
