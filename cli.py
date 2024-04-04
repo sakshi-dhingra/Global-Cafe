@@ -14,7 +14,8 @@ def signup_group():
     # group_name = input("Enter group name: ")
     # group_location = input("Enter group location: ")
 
-    response = requests.post(f"{BASE_URL}/signup/group",
+    region = input("Enter region r1, r2 or r3: ")
+    response = requests.post(f"{BASE_URL}/signup/group?region={region}",
                              json={})
     if response.status_code != 200:
        print(response.text, response.status_code)
@@ -33,15 +34,6 @@ def signup_user():
     full_name = input("Enter full name: ")
     group_id = input("Enter group ID: ")
     location = input("Enter your Home Region (R1, R2 or R3): ")
-
-    if location == 'R1':
-        location = "001-"
-    elif location == 'R2':
-        location = "002-"
-    elif location == 'R3':
-        location = "003-"
-    else:
-        location = "001-"
 
     response = requests.post(f"{BASE_URL}/signup",
                              json={
@@ -174,8 +166,9 @@ def get_user():
 def run_scenario():
     # Create 8 new groups.
     group_ids = []
+    locations = ["r1", "r2", "r3"]
     for _ in range(7):
-        response = requests.post(f"{BASE_URL}/signup/group",
+        response = requests.post(f"{BASE_URL}/signup/group?region={random.choice(locations)}",
                                  json={})
         data = response.json()
         group_ids.append(data['group_id'])
@@ -187,7 +180,6 @@ def run_scenario():
              "Grace", "Heidi", "Ivan", "Judy", "Kevin", 
              "Linda", "Michael", "Nancy", "Oscar", "Peggy", 
              "Quincy", "Rita", "Steve", "Tina", "Ursula"]
-    locations = ["001-", "002-", "003-"]
     user_groups = {}
     user_ids = []
     while len(user_ids) < 20:
