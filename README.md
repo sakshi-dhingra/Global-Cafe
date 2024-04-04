@@ -37,7 +37,7 @@
     * easy to make
     * will make project look complex
 
-2. Cloud Infra setup - **Sakshi**  ❗
+2. Cloud Infra setup - **Sakshi** 
     * Register for AWS free-tier ✅
     * EC2 and Auto-scaling groups (ASG -> horizontal scaling) ✅
     * Application load balancer (ALB) ✅
@@ -123,3 +123,63 @@ COMMIT TRANSACTION;
 4. CLI: add another ques in cli - what is your home region?  - assign user id based on this - '001-<>' for R1 '002-<>' for R2, '003-<>' for R3. 
 
   
+-----------------
+
+* Basic caching: cache catalogue table using a dictionary in API server.
+    {
+        "request-details": {
+            "data": response,  #unpack
+            "timestamp": value
+        }
+    }
+
+    if current - cache_timestamp > expiry, request from database again
+
+* Changes in diagram
+
+
+---
+KEY FEATURES
+
+Code
+* Transaction locks to avoid duplicate writes
+
+========================================
+
+## Routing Logic
+
+R1                       R2                        R3
+[DB]                    [DB]                      [DB]
+001                     002                        003
+
+Note: user_id consists of <rid>,<_uid>  #region id, _user id
+        group_id consists of <rid>, <_gid> 
+
+USERS
+    username,password,full_name,groups
+    sakshi@abcd.com,abcd,Sakshi Dhingra,[001-abcdef,002-astgv1,001-sdfsd2]
+
+GROUPS
+    group_name,location,users,points
+    Dhingras,Dublin,[001-abcdef,002-astgv1,001-sdfsd2],0
+
+WHEN USER MAKES A TRANSACTION OR FETCHES GROUP DETAILS
+1. Get user id and lookup all the groups linked to that user in user table under groups column.
+2. For each group linked to the user:
+    check each group-id and extract rid. 
+    check if rid is same as current location
+        if yes, find the group id details (such as group name and points) from that location's group table 
+        else, check rid and route the query to that specific region's database's group table and give users and points in group
+
+        Note: the logic to get users part of a group will be similar. For group_id get members by refering to users column and then do routing lookup
+
+    Then _Group id: Group members, points_ for all linked group ids will be displayed to user
+
+3. User will choose a group from which he/she wants to redeem points. 
+
+===============================================
+
+
+
+
+
