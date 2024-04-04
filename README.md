@@ -148,9 +148,11 @@ Code
 
 ## Routing Logic
 
+```
 R1                       R2                        R3
 [DB]                    [DB]                      [DB]
 001                     002                        003
+```
 
 Note: user_id consists of <rid>,<_uid>  #region id, _user id
         group_id consists of <rid>, <_gid> 
