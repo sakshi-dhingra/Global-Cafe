@@ -1,9 +1,9 @@
 """
 Simple CLI for interacting with the server.
 """
-import requests
 import random
 import time
+import requests
 
 BASE_URL = 'http://127.0.0.1:5000'  # Update this with your server's URL
 
@@ -18,8 +18,8 @@ def signup_group():
     response = requests.post(f"{BASE_URL}/signup/group?region={region}",
                              json={})
     if response.status_code != 200:
-       print(response.text, response.status_code)
-       return
+        print(response.text, response.status_code)
+        return
     data = response.json()
     print(data)
 
@@ -45,12 +45,15 @@ def signup_user():
                                  "location": location
                                  })
     if response.status_code != 200:
-       print(response.text, response.status_code)
-       return
+        print(response.text, response.status_code)
+        return
     data = response.json()
     print(data)
 
 def join_group():
+    """
+    Join a group.
+    """
     user_id = input("Enter user id: ")
     group_id = input("Enter group id you wish to join: ")
     response = requests.post(f"{BASE_URL}/join_group",
@@ -59,8 +62,8 @@ def join_group():
                                  "group_id": group_id
                                  })
     if response.status_code != 200:
-       print(response.text, response.status_code)
-       return
+        print(response.text, response.status_code)
+        return
     data = response.json()
     print(data)
 
@@ -77,8 +80,8 @@ def login():
                                  "user_password": user_password
                                  })
     if response.status_code != 200:
-       print(response.text, response.status_code)
-       return
+        print(response.text, response.status_code)
+        return
     data = response.json()
     print(data)
 
@@ -89,8 +92,8 @@ def get_menu_items():
     """
     response = requests.get(f"{BASE_URL}/menu")
     if response.status_code != 200:
-       print(response.text, response.status_code)
-       return
+        print(response.text, response.status_code)
+        return
     menu_items = response.json()
     print(menu_items)
 
@@ -119,8 +122,8 @@ def make_transaction():
                                  "use_points": use_points
                                  })
     if response.status_code != 200:
-       print(response.text, response.status_code)
-       return
+        print(response.text, response.status_code)
+        return
     data = response.json()
     print(data)
 
@@ -132,8 +135,8 @@ def get_transactions():
     user_id = input("Enter user ID: ")
     response = requests.get(f"{BASE_URL}/transaction?user_id={user_id}")
     if response.status_code != 200:
-       print(response.text, response.status_code)
-       return
+        print(response.text, response.status_code)
+        return
     transactions = response.json()
     print(transactions)
 
@@ -145,8 +148,8 @@ def get_group():
     group_id = input("Enter group ID: ")
     response = requests.get(f"{BASE_URL}/group?group_id={group_id}")
     if response.status_code != 200:
-       print(response.text, response.status_code)
-       return
+        print(response.text, response.status_code)
+        return
     group = response.json()
     print(group)
 
@@ -158,12 +161,15 @@ def get_user():
     user_id = input("Enter user ID: ")
     response = requests.get(f"{BASE_URL}/user?user_id={user_id}")
     if response.status_code != 200:
-       print(response.text, response.status_code)
-       return
+        print(response.text, response.status_code)
+        return
     user = response.json()
     print(user)
 
 def run_scenario():
+    """
+    Run test scenario
+    """
     # Create 8 new groups.
     group_ids = []
     locations = ["r1", "r2", "r3"]
