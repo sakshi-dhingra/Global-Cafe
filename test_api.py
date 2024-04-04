@@ -3,6 +3,8 @@ Tests for Flask API server.
 
 Testing for routing
 """
+import psycopg2
+import mysql.connector
 
 def test_nothing():
     """
@@ -10,11 +12,10 @@ def test_nothing():
     """
     assert True
 
-
-import psycopg2
-import mysql.connector
-
 def get_db_connection(region):
+    """
+    Get db details
+    """
     if region.lower() == "ireland": #R1
         return {
             "load_balancer": {"host": "18.201.146.92", "port": 4006},
@@ -37,6 +38,9 @@ def get_db_connection(region):
         raise ValueError("Invalid region")
 
 def connect_to_database(region, db_type):
+    """
+    Create db connection
+    """
     connection_details = get_db_connection(region)
     db_info = connection_details[db_type.lower()]
     
@@ -56,6 +60,9 @@ connection = connect_to_database(region, db_type)
 
 # Execute a read query example
 def execute_read_query(connection, query):
+    """
+    run sample read
+    """
     cursor = connection.cursor()
     try:
         cursor.execute(query)
@@ -68,6 +75,9 @@ def execute_read_query(connection, query):
         cursor.close()
 
 def create_table(connection):
+    """
+    create sample table
+    """
     cursor = connection.cursor()
     try:
         cursor.execute("""
