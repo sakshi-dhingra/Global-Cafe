@@ -52,12 +52,6 @@ def connect_to_database(region, db_type):
         database="mysql"
     )
 
-
-# Example usage:
-region = "ireland"
-db_type = "load_balancer"
-connection = connect_to_database(region, db_type)
-
 # Execute a read query example
 def execute_read_query(connection, query):
     """
@@ -96,13 +90,21 @@ def create_table(connection):
 
 #create_table(connection)
 
-# Example read query
-query = "SELECT * FROM User_Groups LIMIT 10;"
-result = execute_read_query(connection, query)
+def main():
+    """
+    main
+    """
+    # Example usage:
+    region = "ireland"
+    db_type = "load_balancer"
+    connection = connect_to_database(region, db_type)
+    # Example read query
+    query = "SELECT * FROM User_Groups LIMIT 10;"
+    result = execute_read_query(connection, query)
 
-if result:
-    print("Query result:")
-    for row in result:
-        print(row)
-else:
-    print("No results returned.")
+    if result:
+        print("Query result:")
+        for row in result:
+            print(row)
+    else:
+        print("No results returned.")
