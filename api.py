@@ -83,8 +83,8 @@ def group_sign_up():
     """
 
     region = request.args.get('region')
-    # conn = connect_to_database(region, "load_balancer")
-    #highest=db.read_record(conn, "user_groups","group_id=(SELECT MAX(group_id) FROM user_groups);")
+    conn = connect_to_database(region, "load_balancer")
+    # highest=db.read_record(conn, "user_groups","group_id=(SELECT MAX(group_id) FROM user_groups);")
     columns = ["group_id", "discount_points", "number_members"]
     # high_id = highest[0][0] + 1
     region = region.lower()
@@ -99,7 +99,7 @@ def group_sign_up():
 
     high_id = f'{region}{generate_id()}'
     values = [str(high_id), '0', '0']
-    db.create_record(conn, 'user_groups', columns, values)
+    db.create_record(conn, 'User_Groups', columns, values)
     return jsonify({'group_id': high_id})
 
 
@@ -118,10 +118,11 @@ def signup():
         email = data.get('email')
         location = data.get('location')
 
-        #region = group_id[:3]
-        # conn = connect_to_database(data.get('location'), "load_balancer")
-        # conn = connect_to_database(region), "load_balancer")
-        groups = db.read_record(conn, "user_groups", f"group_id='{group_id}'")
+        region_group = group_id[:3]
+
+        conn_group = connect_to_database(region_group, "load_balancer")
+        groups = db.read_record(
+            conn_group, "User_Groups", f"group_id='{group_id}'")
         # print(groups)
         # Ensure group exists.
         if group_id not in groups[0]:
@@ -146,18 +147,20 @@ def signup():
         updated_group_members = {"number_members": int(groups[0][2]) + 1}
 
         # User group tally updated
-        db.update_record(conn, "user_groups",
+        db.update_record(conn_group, "User_Groups",
                          updated_group_members, f"group_id='{group_id}'")
 
         # Create user
         columns = ["user_id", "username", "email", "pswd", "group_id"]
         values = [user_id, user_name, email, user_password, group_id]
-        db.create_record(conn, "Users", columns, values)
+        region_user = user_id[:3]
+        conn_user = connect_to_database(region_user, "load_balancer")
+        db.create_record(conn_user, "Users", columns, values)
 
         # Update group_members table
         columns = ["group_id", "user_id"]
         values = [group_id, user_id]
-        db.create_record(conn, "Group_Members", columns, values)
+        db.create_record(conn_group, "Group_Members", columns, values)
 
         return jsonify({'user_id': user_id})
     return jsonify({'error': 'Invalid data'}), 400
@@ -175,14 +178,17 @@ def join_group():
         group_id = data.get('group_id')
         user_id = data.get('user_id')
 
-        #region = group_id[:3]
-        # conn = connect_to_database(user_id[:3], "load_balancer")
-        # conn = connect_to_database(region), "load_balancer")
+        region_group = group_id[:3]
+        region_user = user_id[:3]
 
-        groups = db.read_record(conn, "user_groups", f"group_id='{group_id}'")
+        conn_group = connect_to_database(region_group, "load_balancer")
+
+        groups = db.read_record(
+            conn_group, "User_Groups", f"group_id='{group_id}'")
         if len(groups) == 0:
             return jsonify({'error': 'Group not found'}), 404
-        users = db.read_record(conn, "users", f"user_id='{user_id}'")
+        conn_user = connect_to_database(region_user, "load_balancer")
+        users = db.read_record(conn_user, "Users", f"user_id='{user_id}'")
         if len(users) == 0:
             return jsonify({'error': 'User not found'}), 404
 
@@ -204,13 +210,13 @@ def join_group():
         updated_group_members = {"number_members": int(groups[0][2]) + 1}
 
         # User group tally updated
-        db.update_record(conn, "User_Groups",
+        db.update_record(conn_group, "User_Groups",
                          updated_group_members, f"group_id='{group_id}'")
 
         # Update group_members table
         columns = ["group_id", "user_id"]
         values = [group_id, user_id]
-        db.create_record(conn, "Group_Members", columns, values)
+        db.create_record(conn_group, "Group_Members", columns, values)
 
         return jsonify({'user_id': user_id, 'group_id': group_id})
     return jsonify({'error': 'Invalid data'}), 400
@@ -224,10 +230,10 @@ def login():
     data = request.json
     user_name = data.get('user_name')
     password = data.get('user_password')
-    #region = data.get('region')
-    # conn = connect_to_database(data.get('region'), "load_balancer")
+    region = data.get('region')
+    conn_user = connect_to_database(region, "load_balancer")
 
-    user = db.read_record(conn, "Users", "'" + user_name +
+    user = db.read_record(conn_user, "Users", "'" + user_name +
                           "' = username AND pswd = '" + password + "'")
     user_id_db = user[0][0]
     user_name_db = user[0][1]
@@ -259,21 +265,43 @@ def make_transaction():
     items = data.get('items')
     use_points = data.get('use_points')
 
-    #region = user_id[:3]
-    # region = group_id[:3]
-    # conn = connect_to_database(region, "load_balancer")
+    region_user = user_id[:3]
+    region_group = group_id[:3]
+    if region_user == region_group:
+        same_region = True
+        conn = connect_to_database(region_user, "load_balancer")
+    else:
+        conn_user = connect_to_database(region_user, "load_balancer")
+        conn_group = connect_to_database(region_group, "load_balancer")
 
     menu_items = db.read_record(conn, "Catalogue")
-    user = db.read_record(conn, "users", f"user_id='{user_id}'")
-    groups = db.read_record(conn, "group_members",
-                            f"user_id='{user_id}' AND group_id='{group_id}'")
+
+    if same_region:
+        user = db.read_record(conn, "Users", f"user_id='{user_id}'")
+        groups = db.read_record(conn, "Group_Members",
+                                f"user_id='{user_id}' AND group_id='{group_id}'")
+    else:
+        user = db.read_record(conn_user, "Users", f"user_id='{user_id}'")
+        groups = db.read_record(conn_group, "Group_Members",
+                                f"user_id='{user_id}' AND group_id='{group_id}'")
     if not groups:
         return jsonify({'error': f'User {user_id} not in group {group_id}'}), 401
 
-    user_group = db.read_record(conn, "user_groups", f"group_id='{group_id}'")
-    highest = db.read_record(
-        conn, "transactions", "transaction_id = (SELECT MAX(transaction_id) FROM transactions);")
-    high_id = highest[0][0] + 1
+    if same_region:
+        user_group = db.read_record(
+            conn, "User_Groups", f"group_id='{group_id}'")
+        highest = db.read_record(
+            conn, "Transactions", "transaction_id = (SELECT MAX(transaction_id) FROM Transactions);")
+    else:
+        user_group = db.read_record(
+            conn_group, "User_Groups", f"group_id='{group_id}'")
+        highest = db.read_record(
+            conn_user, "Transactions", "transaction_id = (SELECT MAX(transaction_id) FROM Transactions);")
+
+    if highest is not None and len(highest) > 0 and highest[0] is not None:
+        high_id = highest[0][0] + 1
+    else:
+        high_id = 1
     group_points = float(user_group[0][1])
 
     menu_items_use = [(t[0], float(t[2])) for t in menu_items]
@@ -296,10 +324,16 @@ def make_transaction():
         columns = ['transaction_id', 'total_amount',
                    'user_id', 'group_id', 'discounts_used']
         values = [high_id, total_cost, user[0][0], group_id, -use_points]
-        db.create_record(conn, "transactions", columns, values)
         new_points_total = {"discount_points": group_points}
-        db.update_record(conn, "user_groups", new_points_total,
-                         "'" + str(group_id) + "' = group_id")
+
+        if same_region:
+            db.create_record(conn, "Transactions", columns, values)
+            db.update_record(conn, "User_Groups", new_points_total,
+                             "'" + str(group_id) + "' = group_id")
+        else:
+            db.create_record(conn_user, "Transactions", columns, values)
+            db.update_record(conn_group, "User_Groups", new_points_total,
+                             "'" + str(group_id) + "' = group_id")
 
         return jsonify({'total_cost': total_cost, 'points': -use_points})
     # points awarded if not redeeming
@@ -308,14 +342,18 @@ def make_transaction():
         points = total_cost * (POINTS_PERCENTAGE / 100)
         new_points = points + group_points
         new_points_total = {"discount_points": new_points}
-        db.update_record(conn, "user_groups", new_points_total,
-                         "'" + str(group_id) + "' = group_id")
-
         columns = ['transaction_id', 'total_amount',
                    'user_id', 'group_id', 'discounts_used']
         values = [high_id, total_cost, user[0][0], group_id, 0]
-        db.create_record(conn, "transactions", columns, values)
 
+        if same_region:
+            db.update_record(conn, "User_Groups", new_points_total,
+                             "'" + str(group_id) + "' = group_id")
+            db.create_record(conn, "Transactions", columns, values)
+        else:
+            db.update_record(conn_group, "User_Groups", new_points_total,
+                             "'" + str(group_id) + "' = group_id")
+            db.create_record(conn_user, "Transactions", columns, values)
         return jsonify({'total_cost': total_cost, 'points': points})
 
 
@@ -325,8 +363,8 @@ def get_transactions():
     Get transactions by user ID.
     """
     user_id = request.args.get('user_id')
-    #region = user_id[:3]
-    # conn = connect_to_database(region, "load_balancer")
+    region = user_id[:3]
+    conn = connect_to_database(region, "load_balancer")
 
     transactions = db.read_record(
         conn, "Transactions", "'" + user_id + "' = user_id")
@@ -339,9 +377,9 @@ def get_group():
     Get group details by group ID.
     """
     group_id = request.args.get('group_id')
-    #region = group_id[:3]
-    # conn = connect_to_database(region, "load_balancer")
-    group = db.read_record(conn, "User_groups", "'" +
+    region = group_id[:3]
+    conn = connect_to_database(region, "load_balancer")
+    group = db.read_record(conn, "User_Groups", "'" +
                            group_id + "' = group_id")
     if group:
         return jsonify(group)
@@ -354,8 +392,8 @@ def get_user():
     Get user details by user ID.
     """
     user_id = request.args.get('user_id')
-    #region = user_id[:3]
-    # conn = connect_to_database(region, "load_balancer")
+    region = user_id[:3]
+    conn = connect_to_database(region, "load_balancer")
 
     user = db.read_record(conn, "Users", "'" + user_id + "' = user_id")
     if user:
@@ -364,7 +402,8 @@ def get_user():
 
 
 if __name__ == '__main__':
-    conn = connect_to_db(host="localhost", port="5432",
-                         database="global_cafe", user="postgres", password="postgres")
-    # conn = connect_to_database("001", "load_balancer") #default connection to Ireland
+    # conn = connect_to_db(host="localhost", port="5432",
+    #                     database="global_cafe", user="postgres", password="postgres")
+    # default connection to Ireland
+    conn = connect_to_database("001", "load_balancer")
     app.run(debug=True)

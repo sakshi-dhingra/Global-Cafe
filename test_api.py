@@ -68,19 +68,93 @@ def execute_read_query(connection, query):
     finally:
         cursor.close()
 
-def create_table(connection):
+def get_table_list(connection):
+    """
+    Retrieve a list of tables in the database
+    """
+    cursor = connection.cursor()
+    try:
+        cursor.execute("SHOW TABLES")
+        tables = cursor.fetchall()
+        table_list = [table[0] for table in tables]
+        return table_list
+    except mysql.connector.Error as e:
+        print(f"Error retrieving table list: {e}")
+        return None
+    finally:
+        cursor.close()
+
+def create_tables(connection):
     """
     create sample table
     """
     cursor = connection.cursor()
     try:
+        cursor.execute("DROP TABLE IF EXISTS User_Groups")
+        connection.commit()
         cursor.execute("""
             create table User_Groups (
-	    group_id int NOT NULL,
+	    group_id char(10) NOT NULL,
 	    discount_points decimal NOT NULL,
 	    number_members int NOT NULL,
 	    PRIMARY KEY (group_id));
         """)
+
+        cursor.execute("""
+            create table Users (
+	user_id char(10) NOT NULL,
+	username varchar(255) NOT NULL,
+	email varchar(255) NOT NULL,
+	pswd varchar(255) NOT NULL,
+	group_id char(10),
+	FOREIGN KEY (group_id) REFERENCES User_Groups(group_id),
+	PRIMARY KEY (user_id)
+);
+        """)
+
+        cursor.execute("""
+            CREATE TABLE Group_Members (
+    group_id char(10),
+    user_id char(10),
+    FOREIGN KEY (group_id) REFERENCES User_Groups(group_id),
+    FOREIGN KEY (user_id) REFERENCES Users(user_id),
+    PRIMARY KEY (group_id, user_id)
+);
+        """)
+
+        cursor.execute("""
+            create table Transactions (
+	transaction_id int NOT NULL,
+	total_amount decimal NOT NULL,
+	user_id char(10) NOT NULL,
+	group_id char(10) NOT NULL,
+	discounts_used decimal NOT NULL,
+	PRIMARY KEY (transaction_id),
+	FOREIGN KEY (user_id) REFERENCES Users(user_id),
+	FOREIGN KEY (group_id) REFERENCES User_Groups(group_id)
+);
+        """)
+
+        cursor.execute("""
+            create table Catalogue (
+	item_id int NOT NULL,
+	item_name varchar(255) NOT NULL,
+	item_price decimal NOT NULL,
+	PRIMARY KEY (item_id)
+);
+        """)
+
+        cursor.execute("""
+            create table Transactions_Details (
+	transaction_id int NOT NULL,
+	item_id int NOT NULL,
+	quantity int NOT NULL,
+	FOREIGN KEY (transaction_id) REFERENCES Transactions(transaction_id),
+	FOREIGN KEY (item_id) REFERENCES Catalogue(item_id)
+);
+        """)
+
+
         connection.commit()
         print("Table 'User_Groups' created successfully.")
     except mysql.connector.Error as e:
@@ -88,16 +162,19 @@ def create_table(connection):
     finally:
         cursor.close()
 
-#create_table(connection)
 
 def main():
     """
     main
     """
     # Example usage:
-    region = "ireland"
+    region = "us east"
     db_type = "load_balancer"
     connection = connect_to_database(region, db_type)
+    #create_tables(connection)
+    #x = get_table_list(connection)
+    #for y in x:
+    #    print(y)
     # Example read query
     query = "SELECT * FROM User_Groups LIMIT 10;"
     result = execute_read_query(connection, query)
@@ -108,3 +185,5 @@ def main():
             print(row)
     else:
         print("No results returned.")
+
+main()
