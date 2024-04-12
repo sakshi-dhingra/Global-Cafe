@@ -36,7 +36,7 @@ def group_sign_up():
     """
     highest = db.read_record(conn, "user_groups", "group_id = (SELECT MAX(group_id) FROM user_groups);")
     columns = ["group_id", "discount_points", "number_members"]
-    high_id = highest[0][0] + 1
+    high_id = highest[0][0] + 1 if highest else 0
     values = [str(high_id), '0', '0']
     db.create_record(conn, 'user_groups', columns, values)
     return jsonify({'group_id': high_id})
@@ -74,12 +74,12 @@ def signup():
         # Create user
         columns = ["user_id", "username", "email", "pswd", "group_id"]
         values = [user_id, user_name, email, user_password, group_id]
-        db.create_record(conn, "Users", columns, values)
+        db.create_record(conn, "users", columns, values)
 
         #Update group_members table
         columns = ["group_id", "user_id"]
         values = [group_id, user_id]
-        db.create_record(conn, "Group_Members", columns, values)
+        db.create_record(conn, "group_members", columns, values)
 
         return jsonify({'user_id': user_id})
     return jsonify({'error': 'Invalid data'}), 400
@@ -119,12 +119,12 @@ def join_group():
         updated_group_members = {"number_members": int(groups[0][2]) + 1}
 
         # User group tally updated
-        db.update_record(conn, "User_Groups", updated_group_members, f"group_id={group_id}")
+        db.update_record(conn, "user_groups", updated_group_members, f"group_id={group_id}")
 
         #Update group_members table
         columns = ["group_id", "user_id"]
         values = [group_id, user_id]
-        db.create_record(conn, "Group_Members", columns, values)
+        db.create_record(conn, "group_members", columns, values)
 
         return jsonify({'user_id': user_id, 'group_id': group_id})
     return jsonify({'error': 'Invalid data'}), 400
@@ -138,7 +138,7 @@ def login():
     user_name = data.get('user_name')
     password = data.get('user_password')
 
-    user = db.read_record(conn, "Users", "'" + user_name + "' = username AND pswd = '" + password + "'" )
+    user = db.read_record(conn, "users", "'" + user_name + "' = username AND pswd = '" + password + "'" )
     user_id_db = user[0][0]
     user_name_db = user[0][1]
     user_password_db = user[0][3]
@@ -154,7 +154,7 @@ def get_menu_items():
     """
     Get menu items.
     """
-    menu_items = db.read_record(conn, "Catalogue")
+    menu_items = db.read_record(conn, "catalogue")
     return jsonify(menu_items)
 
 @app.route('/transaction', methods=['POST'])
@@ -167,7 +167,7 @@ def make_transaction():
     group_id = data.get('group_id')
     items = data.get('items')
     use_points = data.get('use_points')
-    menu_items = db.read_record(conn, "Catalogue")
+    menu_items = db.read_record(conn, "catalogue")
     user = db.read_record(conn, "users", f"user_id='{user_id}'")
     groups = db.read_record(conn, "group_members", f"user_id='{user_id}' AND group_id={group_id}")
     if not groups:
@@ -176,7 +176,7 @@ def make_transaction():
 
     user_group = db.read_record(conn, "user_groups", f"group_id={str(group_id)}")
     highest = db.read_record(conn, "transactions", "transaction_id = (SELECT MAX(transaction_id) FROM transactions);")
-    high_id = highest[0][0] + 1
+    high_id = highest[0][0] + 1 if highest else 0
     group_points = float(user_group[0][1])
 
     menu_items_use = [(t[0], float(t[2])) for t in menu_items]
@@ -225,7 +225,7 @@ def get_transactions():
     """
     user_id = request.args.get('user_id')
 
-    transactions = db.read_record(conn, "Transactions", "'" + user_id + "' = user_id")
+    transactions = db.read_record(conn, "transactions", "'" + user_id + "' = user_id")
     return jsonify(transactions)
 
 
@@ -235,7 +235,7 @@ def get_group():
     Get group details by group ID.
     """
     group_id = request.args.get('group_id')
-    group = db.read_record(conn, "User_groups", "'" + group_id + "' = group_id")
+    group = db.read_record(conn, "user_groups", "'" + group_id + "' = group_id")
     if group:
         return jsonify(group)
     return jsonify({'error': 'Group not found'}), 404
@@ -248,7 +248,7 @@ def get_user():
     """
     user_id = request.args.get('user_id')
 
-    user = db.read_record(conn, "Users", "'" + user_id + "' = user_id")
+    user = db.read_record(conn, "users", "'" + user_id + "' = user_id")
     if user:
         return jsonify(user)
     return jsonify({'error': 'User not found'}), 404

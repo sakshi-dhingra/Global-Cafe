@@ -117,7 +117,7 @@ def make_transaction():
             break
         quantity = int(input("Enter quantity: "))
         items.append({"item_id": int(item_id), "quantity": quantity})
-        use_points = float(input("Redeem how many points: "))
+    use_points = float(input("Redeem how many points: "))
 
     response = requests.post(f"{BASE_URL}/transaction",
                              json={
@@ -173,6 +173,7 @@ def get_user():
 
 def run_scenario():
     # Create 8 new groups.
+    print("--- Create 8 new groups.")
     group_ids = []
     for _ in range(7):
         response = requests.post(f"{BASE_URL}/signup/group",
@@ -183,6 +184,7 @@ def run_scenario():
     group_ids.extend(existing_groups)
 
     # Create 20 users (choose random group).
+    print("--- Create 20 users (choose random group).")
     names = ["Alice", "Bob", "Charlie", "Dominic", "Eve", "Frank", 
              "Grace", "Heidi", "Ivan", "Judy", "Kevin", 
              "Linda", "Michael", "Nancy", "Oscar", "Peggy", 
@@ -212,6 +214,7 @@ def run_scenario():
         names.remove(name)
 
     # Randomly try and join 10 users to groups.
+    print("--- Randomly try and join 10 users to groups.")
     for _ in range(10):
         user_id = user_ids[random.randint(0, len(user_ids) - 1)]
         group_id = group_ids[random.randint(0, len(group_ids) - 1)]
@@ -228,6 +231,7 @@ def run_scenario():
         print(data)
 
     # Make 200 transactions (choose random user and random items).
+    print("--- Make 200 transactions (choose random user and random items).")
     menu_items = requests.get(f"{BASE_URL}/menu").json()
     print(menu_items[0])
     for _ in range(200):

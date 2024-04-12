@@ -13,54 +13,54 @@
 --     CONNECTION LIMIT = -1
 --     IS_TEMPLATE = False;
 
-create table User_Groups (
+create table user_groups (
 	group_id int NOT NULL,
 	discount_points decimal NOT NULL,
 	number_members int NOT NULL,
 	PRIMARY KEY (group_id)
 );
 
-create table Users (
+create table users (
 	user_id char(10) NOT NULL,
 	username varchar(255) NOT NULL,
 	email varchar(255) NOT NULL,
 	pswd varchar(255) NOT NULL,
 	group_id int,
-	FOREIGN KEY (group_id) REFERENCES User_Groups(group_id),
+	FOREIGN KEY (group_id) REFERENCES user_groups(group_id),
 	PRIMARY KEY (user_id)
 );
 
-CREATE TABLE Group_Members (
+CREATE TABLE group_members (
     group_id int,
     user_id char(10),
-    FOREIGN KEY (group_id) REFERENCES User_Groups(group_id),
-    FOREIGN KEY (user_id) REFERENCES Users(user_id),
+    FOREIGN KEY (group_id) REFERENCES user_groups(group_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
     PRIMARY KEY (group_id, user_id)
 );
 
-create table Transactions (
+create table transactions (
 	transaction_id int NOT NULL,
 	total_amount decimal NOT NULL,
 	user_id char(10) NOT NULL,
 	group_id int NOT NULL,
 	discounts_used decimal NOT NULL,
 	PRIMARY KEY (transaction_id),
-	FOREIGN KEY (user_id) REFERENCES Users(user_id),
-	FOREIGN KEY (group_id) REFERENCES User_Groups(group_id)
+	FOREIGN KEY (user_id) REFERENCES users(user_id),
+	FOREIGN KEY (group_id) REFERENCES user_groups(group_id)
 );
 
-create table Catalogue (
+create table catalogue (
 	item_id int NOT NULL,
 	item_name varchar(255) NOT NULL,
 	item_price decimal NOT NULL,
 	PRIMARY KEY (item_id)
 );
 
-create table Transactions_Details (
+create table transactions_details (
 	transaction_id int NOT NULL,
 	item_id int NOT NULL,
 	quantity int NOT NULL,
-	FOREIGN KEY (transaction_id) REFERENCES Transactions(transaction_id),
-	FOREIGN KEY (item_id) REFERENCES Catalogue(item_id)
+	FOREIGN KEY (transaction_id) REFERENCES transactions(transaction_id),
+	FOREIGN KEY (item_id) REFERENCES catalogue(item_id)
 );
 
