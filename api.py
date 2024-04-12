@@ -196,11 +196,11 @@ def make_transaction():
             return jsonify({'error': 'Not enough points'}), 400
         group_points -= use_points
         total_cost -= use_points
+        
+        new_points_total = {"discount_points" : group_points }
         columns = ['transaction_id', 'total_amount', 'user_id', 'group_id', 'discounts_used']
         values = [high_id, total_cost, user[0][0], group_id, -use_points]
-        db.create_record(conn, "transactions", columns, values)
-        new_points_total = {"discount_points" : group_points }
-        db.update_record(conn, "user_groups", new_points_total, "'" + str(group_id) + "' = group_id")
+        db.transaction_record(conn, "transactions", columns, values, "user_groups", new_points_total, "'" + str(group_id) + "' = group_id")
 
         return jsonify({'total_cost': total_cost, 'points': -use_points})
     # points awarded if not redeeming
@@ -208,12 +208,11 @@ def make_transaction():
         # Calculate points.
         points = total_cost * (POINTS_PERCENTAGE / 100)
         new_points = points + group_points
+        
         new_points_total = {"discount_points": new_points}
-        db.update_record(conn, "user_groups", new_points_total, "'" + str(group_id) + "' = group_id")
-
         columns = ['transaction_id', 'total_amount', 'user_id', 'group_id', 'discounts_used']
         values = [high_id, total_cost, user[0][0], group_id, 0]
-        db.create_record(conn, "transactions", columns, values)
+        db.transaction_record(conn, "transactions", columns, values, "user_groups", new_points_total, "'" + str(group_id) + "' = group_id")
 
         return jsonify({'total_cost': total_cost, 'points': points})
 
