@@ -7,11 +7,12 @@ import mysql.connector
 from flask import Flask, request, jsonify
 import mysql.connector
 import db_operations as db
+from decimal import Decimal
 
 app = Flask(__name__)
 
 MAX_GROUP_SIZE = 4
-POINTS_PERCENTAGE = 1
+POINTS_PERCENTAGE = 10
 
 
 def get_db_connection(region):
@@ -20,21 +21,21 @@ def get_db_connection(region):
     """
     if region.lower() == "r1" or region == "001":  # R1 Ireland
         return {
-            "load_balancer": {"host": "18.201.146.92", "port": 4006},
-            "master": {"host": "18.201.146.92", "port": 3307},
-            "slave": {"host": "18.201.146.92", "port": 3307}
+            "load_balancer": {"host": "18.201.52.2", "port": 4006},
+            "master": {"host": "18.201.52.2", "port": 3307},
+            "slave": {"host": "18.201.52.2", "port": 3307}
         }
     elif region.lower() == "r2" or region == "002":  # R2 US East
         return {
-            "load_balancer": {"host": "54.172.222.222", "port": 4006},
-            "master": {"host": "54.172.222.222", "port": 3307},
-            "slave": {"host": "54.172.222.222", "port": 3307}
+            "load_balancer": {"host": "54.196.146.52", "port": 4006},
+            "master": {"host": "54.196.146.52", "port": 3307},
+            "slave": {"host": "54.196.146.52", "port": 3307}
         }
     elif region.lower() == "r3" or region == "003":  # R3 Singapore
         return {
-            "load_balancer": {"host": "18.141.160.15", "port": 4006},
-            "master": {"host": "18.141.160.15", "port": 3307},
-            "slave": {"host": "18.141.160.15", "port": 3307}
+            "load_balancer": {"host": "18.136.103.207", "port": 4006},
+            "master": {"host": "18.136.103.207", "port": 3307},
+            "slave": {"host": "18.136.103.207", "port": 3307}
         }
     else:
         raise ValueError("Invalid region")
@@ -52,7 +53,7 @@ def connect_to_database(region, db_type):
         port=db_info["port"],
         user="admin",
         password="DIstP@assW*rD",
-        database="mysql"
+        database="global_cafe"
     )
 
 
@@ -97,7 +98,7 @@ def group_sign_up():
 
     high_id = f'{region}{generate_id()}'
     values = [str(high_id), '0', '0']
-    db.create_record(conn, 'User_Groups', columns, values)
+    db.create_record(conn, 'user_groups', columns, values)
     return jsonify({'group_id': high_id})
 
 
@@ -120,12 +121,10 @@ def signup():
 
         conn_group = connect_to_database(region_group, "load_balancer")
         groups = db.read_record(
-            conn_group, "User_Groups", f"group_id='{group_id}'")
+            conn_group, "user_groups", f"group_id='{group_id}'")
         # print(groups)
         # Ensure group exists.
-        if group_id not in groups[0]:
-            print(group_id)
-            print(groups[0][0])
+        if len(groups) == 0:
             return jsonify({'error': 'Group not found'}), 404
         # Ensure group is not full.
         if groups[0][2] >= MAX_GROUP_SIZE:
@@ -145,12 +144,12 @@ def signup():
         updated_group_members = {"number_members": int(groups[0][2]) + 1}
 
         # User group tally updated
-        db.update_record(conn_group, "User_Groups",
+        db.update_record(conn_group, "user_groups",
                          updated_group_members, f"group_id='{group_id}'")
 
         # Create user
-        columns = ["user_id", "username", "email", "pswd", "group_id"]
-        values = [user_id, user_name, email, user_password, group_id]
+        columns = ["user_id", "username", "email", "pswd"]
+        values = [user_id, user_name, email, user_password]
         region_user = user_id[:3]
         conn_user = connect_to_database(region_user, "load_balancer")
         db.create_record(conn_user, "users", columns, values)
@@ -182,11 +181,12 @@ def join_group():
         conn_group = connect_to_database(region_group, "load_balancer")
 
         groups = db.read_record(
-            conn_group, "User_Groups", f"group_id='{group_id}'")
+            conn_group, "user_groups", f"group_id='{group_id}'")
         if len(groups) == 0:
             return jsonify({'error': 'Group not found'}), 404
+
         conn_user = connect_to_database(region_user, "load_balancer")
-        users = db.read_record(conn_user, "Users", f"user_id='{user_id}'")
+        users = db.read_record(conn_user, "users", f"user_id='{user_id}'")
         if len(users) == 0:
             return jsonify({'error': 'User not found'}), 404
 
@@ -268,10 +268,15 @@ def make_transaction():
         same_region = True
         conn = connect_to_database(region_user, "load_balancer")
     else:
+        same_region = False
+        conn = None
         conn_user = connect_to_database(region_user, "load_balancer")
         conn_group = connect_to_database(region_group, "load_balancer")
 
-    menu_items = db.read_record(conn, "catalogue")
+    if conn:
+        menu_items = db.read_record(conn, "catalogue")
+    else:
+        menu_items = db.read_record(conn_user, "catalogue")
 
     if same_region:
         user = db.read_record(conn, "users", f"user_id='{user_id}'")
@@ -326,18 +331,18 @@ def make_transaction():
         if same_region:
             db.create_record(conn, "transactions", columns, values)
             db.update_record(conn, "user_groups", new_points_total,
-                             "'" + str(group_id) + "' = group_id")
+                              f"group_id='{group_id}'")
         else:
             db.create_record(conn_user, "transactions", columns, values)
             db.update_record(conn_group, "user_groups", new_points_total,
-                             "'" + str(group_id) + "' = group_id")
+                              f"group_id='{group_id}'")
 
         return jsonify({'total_cost': total_cost, 'points': -use_points})
     # points awarded if not redeeming
     else:
         # Calculate points.
         points = total_cost * (POINTS_PERCENTAGE / 100)
-        new_points = points + group_points
+        new_points = float(points + group_points)
         
         new_points_total = {"discount_points": new_points}
         
@@ -347,11 +352,11 @@ def make_transaction():
 
         if same_region:
             db.update_record(conn, "user_groups", new_points_total,
-                             "'" + str(group_id) + "' = group_id")
+                              f"group_id='{group_id}'")
             db.create_record(conn, "transactions", columns, values)
         else:
             db.update_record(conn_group, "user_groups", new_points_total,
-                             "'" + str(group_id) + "' = group_id")
+                              f"group_id='{group_id}'")
             db.create_record(conn_user, "transactions", columns, values)
         return jsonify({'total_cost': total_cost, 'points': points})
 
