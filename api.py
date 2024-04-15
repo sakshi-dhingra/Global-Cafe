@@ -412,5 +412,10 @@ def get_user():
     return jsonify({'error': 'User not found'}), 404
 
 
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({"message": "all good"})
+
+
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0", port=PORT)
