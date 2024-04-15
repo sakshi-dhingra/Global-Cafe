@@ -336,13 +336,20 @@ def make_transaction():
         new_points_total = {"discount_points": group_points}
 
         if same_region:
-            db.create_record(conn, "transactions", columns, values)
-            db.update_record(conn, "user_groups", new_points_total,
+            res = db.update_record_transaction(conn, "user_groups", new_points_total,
                               f"group_id='{group_id}'")
+            if res:
+                db.create_record(conn, "transactions", columns, values)
+            else:
+                return jsonify({"message": "Unable to modify group points."}), 500
         else:
-            db.create_record(conn_user, "transactions", columns, values)
-            db.update_record(conn_group, "user_groups", new_points_total,
+            
+            res = db.update_record_transaction(conn_group, "user_groups", new_points_total,
                               f"group_id='{group_id}'")
+            if res:
+                db.create_record(conn_user, "transactions", columns, values)
+            else:
+                return jsonify({"message": "Unable to modify group points."}), 500
 
         return jsonify({'total_cost': total_cost, 'points': -use_points})
     # points awarded if not redeeming
@@ -358,13 +365,19 @@ def make_transaction():
         values = [high_id, total_cost, user[0][0], group_id, 0]
 
         if same_region:
-            db.update_record(conn, "user_groups", new_points_total,
+            res = db.update_record_transaction(conn, "user_groups", new_points_total,
                               f"group_id='{group_id}'")
-            db.create_record(conn, "transactions", columns, values)
+            if res:
+                db.create_record(conn, "transactions", columns, values)
+            else:
+                return jsonify({"message": "Unable to modify group points."}), 500
         else:
-            db.update_record(conn_group, "user_groups", new_points_total,
+            res = db.update_record_transaction(conn_group, "user_groups", new_points_total,
                               f"group_id='{group_id}'")
-            db.create_record(conn_user, "transactions", columns, values)
+            if res:
+                db.create_record(conn_user, "transactions", columns, values)
+            else:
+                return jsonify({"message": "Unable to modify group points."}), 500
         return jsonify({'total_cost': total_cost, 'points': points})
 
 
