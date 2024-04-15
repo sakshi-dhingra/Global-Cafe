@@ -73,11 +73,13 @@ def login():
     """
     user_name = input("Enter username: ")
     user_password = input("Enter password: ")
+    user_region = input("Region: ")
 
     response = requests.post(f"{BASE_URL}/login",
                              json={
                                  "user_name": user_name,
-                                 "user_password": user_password
+                                 "user_password": user_password,
+                                 "region": user_region
                                  })
     if response.status_code != 200:
         print(response.text, response.status_code)
