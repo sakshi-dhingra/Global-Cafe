@@ -23,6 +23,8 @@ def create_record(connection, table, columns, values):
     DB writes
     """
     query = f"INSERT INTO {table} ({', '.join(columns)}) VALUES ({', '.join(['%s' for _ in values])})"
+    print("  Create query:", query)
+    print("  Create values:", values)
     execute_query(connection, query, values)
 
 # Read
@@ -34,11 +36,12 @@ def read_record(connection, table, condition=None):
     if condition:
         query += f" WHERE {condition}"
     try:
+        print("  Read query:", query)
         cursor = connection.cursor()
         cursor.execute(query)
         records = cursor.fetchall()
         for record in records:
-            print(record)
+            print("  Read record:", record)
         return records
     except Error as e:
         print("Error reading records:", e)
@@ -52,6 +55,8 @@ def update_record(connection, table, set_values, condition):
     """
     query = f"UPDATE {table} SET {', '.join([f'{col} = %s' for col in set_values.keys()])} WHERE {condition}"
     values = list(set_values.values())
+    print("  Update query:", query)
+    print("  Update values:", values)
     execute_query(connection, query, values)
 
 # Delete
