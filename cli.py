@@ -4,6 +4,7 @@ Simple CLI for interacting with the server.
 import random
 import time
 import requests
+from tabulate import tabulate
 
 BASE_URL = 'http://127.0.0.1:5000'  # Update this with your server's URL
 
@@ -18,10 +19,11 @@ def signup_group():
     response = requests.post(f"{BASE_URL}/signup/group?region={region}",
                              json={})
     if response.status_code != 200:
-        print(response.text, response.status_code)
+        print("Error while creating group:", response.text, response.status_code)
         return
     data = response.json()
-    print(data)
+    print("Group created with group id:", data["group_id"])
+    print()
 
 
 def signup_user():
@@ -45,10 +47,10 @@ def signup_user():
                                  "location": location
                                  })
     if response.status_code != 200:
-        print(response.text, response.status_code)
+        print("Error while signup:", response.text, response.status_code)
         return
     data = response.json()
-    print(data)
+    print("User created with user id: {} and is member of group id: {}\n".format(data["user_id"], group_id))
 
 def join_group():
     """
@@ -62,10 +64,11 @@ def join_group():
                                  "group_id": group_id
                                  })
     if response.status_code != 200:
-        print(response.text, response.status_code)
+        print("Error while joining group:", response.text, response.status_code)
         return
     data = response.json()
-    print(data)
+    print("User with user id: {} and is now member of group id: {}".format(user_id, group_id))
+    print()
 
 def login():
     """
@@ -82,10 +85,11 @@ def login():
                                  "region": user_region
                                  })
     if response.status_code != 200:
-        print(response.text, response.status_code)
+        print("Error while login:", response.text, response.status_code)
         return
     data = response.json()
-    print(data)
+    print("Login successful, your user id is", data["user_id"])
+    print()
 
 
 def get_menu_items():
@@ -94,11 +98,12 @@ def get_menu_items():
     """
     response = requests.get(f"{BASE_URL}/menu")
     if response.status_code != 200:
-        print(response.text, response.status_code)
+        print("Error while getting menu items:", response.text, response.status_code)
         return
     menu_items = response.json()
-    print(menu_items)
-
+    print("\nCafe Menu:")
+    print(tabulate(menu_items, headers=["Item ID", "Item Name", "Cost (Euros)"], tablefmt="rounded_outline"))
+    print()
 
 def make_transaction():
     """
@@ -114,6 +119,11 @@ def make_transaction():
             break
         quantity = int(input("Enter quantity: "))
         items.append({"item_id": int(item_id), "quantity": quantity})
+    
+    print("\nSelected items:")
+    print(tabulate(items, headers="keys", tablefmt="rounded_outline"))
+    print()
+
     use_points = float(input("Redeem how many points: "))
 
     response = requests.post(f"{BASE_URL}/transaction",
@@ -124,10 +134,16 @@ def make_transaction():
                                  "use_points": use_points
                                  })
     if response.status_code != 200:
-        print(response.text, response.status_code)
+        print("Error during transaction:", response.text, response.status_code)
         return
     data = response.json()
-    print(data)
+    print("Transaction successful with total") # points total_cost
+    print("  Total:", data["total_cost"])
+    if data["points"] >= 0:
+        print("  Points earned:", data["points"])
+    else:
+        print("  Points spent:", -data["points"])
+    print()
 
 
 def get_transactions():
@@ -137,10 +153,12 @@ def get_transactions():
     user_id = input("Enter user ID: ")
     response = requests.get(f"{BASE_URL}/transaction?user_id={user_id}")
     if response.status_code != 200:
-        print(response.text, response.status_code)
+        print("Error when fetching transaction history:", response.text, response.status_code)
         return
     transactions = response.json()
-    print(transactions)
+    print("\nTransactions:")
+    print(tabulate(transactions, headers=["Transaction ID", "Total Cost (Euros)", "User ID", "Group ID", "Discounts points used"], tablefmt="rounded_outline"))
+    print()
 
 
 def get_group():
@@ -150,10 +168,10 @@ def get_group():
     group_id = input("Enter group ID: ")
     response = requests.get(f"{BASE_URL}/group?group_id={group_id}")
     if response.status_code != 200:
-        print(response.text, response.status_code)
+        print("Error when getting group details:", response.text, response.status_code)
         return
     group = response.json()
-    print(group)
+    print("Group points balance: {}, Group members: {}\n".format(group[0][1], group[0][2]))
 
 
 def get_user():
@@ -163,10 +181,15 @@ def get_user():
     user_id = input("Enter user ID: ")
     response = requests.get(f"{BASE_URL}/user?user_id={user_id}")
     if response.status_code != 200:
-        print(response.text, response.status_code)
+        print("Error when getting user details:", response.text, response.status_code)
         return
     user = response.json()
-    print(user)
+    #[['001-EMUUyw', 'test', 'test', 'test']]
+    print("\nUser details:")
+    print("  Username:", user[0][1])
+    print("  Email:", user[0][2])
+    print()
+
 
 def run_scenario():
     """
@@ -257,50 +280,60 @@ def run_scenario():
         print(data)
         time.sleep(1)
 
+def display_menu():
+    menu = [
+        ["1", "Signup group"],
+        ["2", "Signup user"],
+        ["3", "Login"],
+        ["4", "Get Menu Items"],
+        ["5", "Make Transaction"],
+        ["6", "Get Transactions"],
+        ["7", "Get Group"],
+        ["8", "Get User"],
+        ["9", "Join a Group"],
+        ["10", "Run Scenario"],
+        ["0", "Exit"]
+    ]
+    
+    print("\nMenu:")
+    print(tabulate(menu, headers=["Option", "Action"], tablefmt="rounded_outline", numalign="center"))
+    print("Enter 'm' or 'M' to display menu again.\n")
+
 def main():
     """
     Main function.
     """
+    display_menu()
     while True:
-        print("\nMenu:")
-        print("1. Signup group")
-        print("2. Signup user")
-        print("3. Login")
-        print("4. Get Menu Items")
-        print("5. Make Transaction")
-        print("6. Get Transactions")
-        print("7. Get Group")
-        print("8. Get User")
-        print("9. Join a Group")
-        print("10. Run Scenario")
-        print("0. Exit")
+        try:
+            choice = input("> ")
 
-        choice = input("Enter your choice: ")
-
-        if choice == '1':
-            signup_group()
-        elif choice == '2':
-            signup_user()
-        elif choice == '3':
-            login()
-        elif choice == '4':
-            get_menu_items()
-        elif choice == '5':
-            make_transaction()
-        elif choice == '6':
-            get_transactions()
-        elif choice == '7':
-            get_group()
-        elif choice == '8':
-            get_user()
-        elif choice == '9':
-            join_group()
-        elif choice == '10':
-            run_scenario()
-        elif choice == '0':
-            break
-        else:
-            print("Invalid choice. Please try again.")
+            if choice == 'M' or choice == 'm':
+                display_menu()
+            if choice == '1':
+                signup_group()
+            elif choice == '2':
+                signup_user()
+            elif choice == '3':
+                login()
+            elif choice == '4':
+                get_menu_items()
+            elif choice == '5':
+                make_transaction()
+            elif choice == '6':
+                get_transactions()
+            elif choice == '7':
+                get_group()
+            elif choice == '8':
+                get_user()
+            elif choice == '9':
+                join_group()
+            elif choice == '10':
+                run_scenario()
+            elif choice == '0':
+                break
+        except KeyboardInterrupt:
+            print()
 
 if __name__ == "__main__":
     main()
