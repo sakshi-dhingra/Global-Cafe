@@ -107,7 +107,7 @@ def get_menu_items():
         return
     menu_items = response.json()
     print("\nCafe Menu:")
-    print(tabulate(menu_items, headers=["Item ID", "Item Name", "Cost (Euros)"], tablefmt="rounded_outline"))
+    print(tabulate(menu_items, headers=["Item ID", "Item Name", "Cost"], tablefmt="rounded_outline"))
     print()
 
 def make_transaction():
@@ -162,7 +162,7 @@ def get_transactions():
         return
     transactions = response.json()
     print("\nTransactions:")
-    print(tabulate(transactions, headers=["Transaction ID", "Total Cost (Euros)", "User ID", "Group ID", "Discounts points used"], tablefmt="rounded_outline"))
+    print(tabulate(transactions, headers=["Transaction ID", "Total Cost", "User ID", "Group ID", "Discounts points used"], tablefmt="rounded_outline"))
     print()
 
 
