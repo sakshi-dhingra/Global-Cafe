@@ -15,7 +15,7 @@
 
 create table user_groups (
 	group_id char(10) NOT NULL,
-	discount_points decimal NOT NULL,
+	discount_points decimal(10, 4) NOT NULL,
 	number_members int NOT NULL,
 	PRIMARY KEY (group_id)
 );
@@ -25,8 +25,6 @@ create table users (
 	username varchar(255) NOT NULL,
 	email varchar(255) NOT NULL,
 	pswd varchar(255) NOT NULL,
-	group_id char(10),
-	FOREIGN KEY (group_id) REFERENCES User_Groups(group_id),
 	PRIMARY KEY (user_id)
 );
 
@@ -34,7 +32,6 @@ CREATE TABLE group_members (
     group_id char(10),
     user_id char(10),
     FOREIGN KEY (group_id) REFERENCES user_groups(group_id),
-    FOREIGN KEY (user_id) REFERENCES users(user_id),
     PRIMARY KEY (group_id, user_id)
 );
 
@@ -43,10 +40,9 @@ create table transactions (
 	total_amount decimal NOT NULL,
 	user_id char(10) NOT NULL,
 	group_id char(10) NOT NULL,
-	discounts_used decimal NOT NULL,
+	discounts_used decimal(10, 4) NOT NULL,
 	PRIMARY KEY (transaction_id),
-	FOREIGN KEY (user_id) REFERENCES users(user_id),
-	FOREIGN KEY (group_id) REFERENCES user_groups(group_id)
+	FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
 create table catalogue (
@@ -63,4 +59,3 @@ create table transactions_details (
 	FOREIGN KEY (transaction_id) REFERENCES transactions(transaction_id),
 	FOREIGN KEY (item_id) REFERENCES catalogue(item_id)
 );
-
