@@ -5,8 +5,13 @@ import random
 import time
 import requests
 from tabulate import tabulate
+import sys
 
-BASE_URL = 'http://127.0.0.1:5000'  # Update this with your server's URL
+if len(sys.argv) < 2:
+    print("Please pass server_ip:port")
+    exit()
+
+BASE_URL = f'http://{sys.argv[1]}'  # Update this with your server's URL
 
 def signup_group():
     """

@@ -7,12 +7,18 @@ import mysql.connector
 from flask import Flask, request, jsonify
 import mysql.connector
 import db_operations as db
-from decimal import Decimal
+import sys
+
+if len(sys.argv) < 3:
+    print("Please pass home region of server and port")
+    exit()
 
 app = Flask(__name__)
 
 MAX_GROUP_SIZE = 4
 POINTS_PERCENTAGE = 10
+HOME_REGION = sys.argv[1]
+PORT = sys.argv[2]
 
 
 def get_db_connection(region):
@@ -248,6 +254,7 @@ def get_menu_items():
     """
     Get menu items.
     """
+    conn = connect_to_database(HOME_REGION, "load_balancer")
     menu_items = db.read_record(conn, "catalogue")
     return jsonify(menu_items)
 
@@ -406,8 +413,4 @@ def get_user():
 
 
 if __name__ == '__main__':
-    # conn = connect_to_db(host="localhost", port="5432",
-    #                     database="global_cafe", user="postgres", password="postgres")
-    # default connection to Ireland
-    conn = connect_to_database("001", "load_balancer")
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0", port=PORT)
