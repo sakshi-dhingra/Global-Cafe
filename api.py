@@ -79,7 +79,7 @@ def generate_id():
     """
     Generate a random ID.
     """
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=6))
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=5))
 
 
 @app.route('/signup/group', methods=['POST'])
@@ -102,7 +102,7 @@ def group_sign_up():
     else:
         region = "001-"
 
-    high_id = f'{region}{generate_id()}'
+    high_id = f'{region}g{generate_id()}'
     values = [str(high_id), '0', '0']
     db.create_record(conn, 'user_groups', columns, values)
     return jsonify({'group_id': high_id})
@@ -146,7 +146,7 @@ def signup():
         else:
             location = "001-"
 
-        user_id = f'{location}{generate_id()}'
+        user_id = f'{location}u{generate_id()}'
         updated_group_members = {"number_members": int(groups[0][2]) + 1}
 
         # User group tally updated
