@@ -1,5 +1,9 @@
 import mysql.connector
 from mysql.connector import Error
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
+logger = logging.getLogger(__name__)
 
 def execute_query(connection, query, values=None):
     """
@@ -12,9 +16,9 @@ def execute_query(connection, query, values=None):
         else:
             cursor.execute(query)
         connection.commit()
-        print("Query executed successfully")
+        logger.info("Query executed successfully")
     except Error as e:
-        print("Error executing query:", e)
+        logger.error(f"Error executing query: {e}")
 
 # CRUD methods
 # Create
@@ -23,8 +27,8 @@ def create_record(connection, table, columns, values):
     DB writes
     """
     query = f"INSERT INTO {table} ({', '.join(columns)}) VALUES ({', '.join(['%s' for _ in values])})"
-    print("  Create query:", query)
-    print("  Create values:", values)
+    logger.info(f"  Create query: {query}")
+    logger.info(f"  Create values: {values}")
     execute_query(connection, query, values)
 
 # Read
@@ -36,15 +40,15 @@ def read_record(connection, table, condition=None):
     if condition:
         query += f" WHERE {condition}"
     try:
-        print("  Read query:", query)
+        logger.info(f"  Read query: {query}")
         cursor = connection.cursor()
         cursor.execute(query)
         records = cursor.fetchall()
         for record in records:
-            print("  Read record:", record)
+            logger.info(f"  Read record: {record}")
         return records
     except Error as e:
-        print("Error reading records:", e)
+        logger.error(f"Error reading records: {e}")
 
 # def read_all_records(connection, table, condition=None):
 
@@ -55,8 +59,8 @@ def update_record(connection, table, set_values, condition):
     """
     query = f"UPDATE {table} SET {', '.join([f'{col} = %s' for col in set_values.keys()])} WHERE {condition}"
     values = list(set_values.values())
-    print("  Update query:", query)
-    print("  Update values:", values)
+    logger.info(f"  Update query: {query}")
+    logger.info(f"  Update values: {values}")
     execute_query(connection, query, values)
 
 # Delete
@@ -75,7 +79,6 @@ def update_record_transaction(connection, table, set_values, condition):
     try:
         # Start the transaction
         cursor = connection.cursor()
-        cursor.execute("START TRANSACTION ISOLATION LEVEL SERIALIZABLE;")
 
         # Construct the UPDATE query
         update_query = f"UPDATE {table} SET {', '.join([f'{col} = %s' for col in set_values.keys()])} WHERE {condition}"
@@ -83,18 +86,25 @@ def update_record_transaction(connection, table, set_values, condition):
         # Extract values from set_values dictionary to pass as parameters
         values = list(set_values.values())
 
+        # Execute the SELECT query with locking
+        cursor.execute(f"SELECT * FROM {table} WHERE {condition} FOR UPDATE")
+
+        # Fetch the result set to consume it
+        cursor.fetchall()
+
         # Execute the UPDATE query
         cursor.execute(update_query, values)
         
         # Commit the transaction
         connection.commit()
-        print("Transaction committed successfully")
+        logger.info("Transaction committed successfully")
         return True
     except mysql.connector.Error as e:
         # Rollback the transaction if an error occurs
-        print("Error updating record:", e)
+        logger.error(f"Error updating record: {e}")
         connection.rollback()
         return False
     finally:
         # Close the cursor
-        cursor.close()
+        if 'cursor' in locals() and cursor is not None:
+            cursor.close()

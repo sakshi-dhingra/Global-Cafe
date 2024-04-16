@@ -8,9 +8,12 @@ from flask import Flask, request, jsonify
 import mysql.connector
 import db_operations as db
 import sys
+import logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 if len(sys.argv) < 3:
-    print("Please pass home region of server and port")
+    logger.error("Please pass home region of server and port")
     exit()
 
 app = Flask(__name__)
@@ -63,18 +66,6 @@ def connect_to_database(region, db_type):
     )
 
 
-def connect_to_db(host, port, database, user, password):
-    """
-    Create db connection
-    """
-    try:
-        connection = mysql.connector.connect(host=host, port=port, database=database, user=user, password=password)
-        print("Connected to the database")
-        return connection
-    except Exception as e:
-        print("Error: ", e)
-
-
 def generate_id():
     """
     Generate a random ID.
@@ -90,8 +81,8 @@ def group_sign_up():
 
     region = request.args.get('region')
     conn = connect_to_database(region, "load_balancer")
-    # highest=db.read_record(conn, "user_groups","group_id=(SELECT MAX(group_id) FROM user_groups);")
-    columns = ["group_id", "discount_points", "number_members"]
+    
+    # generate prefix
     region = region.lower()
     if region == 'r1':
         region = "001-"
@@ -101,11 +92,15 @@ def group_sign_up():
         region = "003-"
     else:
         region = "001-"
-
-    high_id = f'{region}g{generate_id()}'
-    values = [str(high_id), '0', '0']
+    
+    # generate group id
+    group_id = f'{region}g{generate_id()}'
+    
+    # insert into DB
+    values = [str(group_id), '0', '0']
+    columns = ["group_id", "discount_points", "number_members"]
     db.create_record(conn, 'user_groups', columns, values)
-    return jsonify({'group_id': high_id})
+    return jsonify({'group_id': group_id})
 
 
 @app.route('/signup', methods=['POST'])
@@ -136,6 +131,7 @@ def signup():
         if groups[0][2] >= MAX_GROUP_SIZE:
             return jsonify({'error': 'Group is full'}), 400
 
+        # generate user id prefix
         location = location.lower()
         if location == 'r1':
             location = "001-"
@@ -145,11 +141,11 @@ def signup():
             location = "003-"
         else:
             location = "001-"
-
+        # generate user id
         user_id = f'{location}u{generate_id()}'
-        updated_group_members = {"number_members": int(groups[0][2]) + 1}
 
         # User group tally updated
+        updated_group_members = {"number_members": int(groups[0][2]) + 1}
         db.update_record(conn_group, "user_groups",
                          updated_group_members, f"group_id='{group_id}'")
 
@@ -211,9 +207,8 @@ def join_group():
         if groups[0][2] >= MAX_GROUP_SIZE:
             return jsonify({'error': 'Group is full'}), 400
 
-        updated_group_members = {"number_members": int(groups[0][2]) + 1}
-
         # User group tally updated
+        updated_group_members = {"number_members": int(groups[0][2]) + 1}
         db.update_record(conn_group, "user_groups",
                          updated_group_members, f"group_id='{group_id}'")
 
@@ -271,6 +266,7 @@ def make_transaction():
     use_points = data.get('use_points')
     region_user = user_id[:3]
     region_group = group_id[:3]
+
     if region_user == region_group:
         same_region = True
         conn = connect_to_database(region_user, "load_balancer")
@@ -280,10 +276,9 @@ def make_transaction():
         conn_user = connect_to_database(region_user, "load_balancer")
         conn_group = connect_to_database(region_group, "load_balancer")
 
-    if conn:
-        menu_items = db.read_record(conn, "catalogue")
-    else:
-        menu_items = db.read_record(conn_user, "catalogue")
+    # get menu items
+    conn_menu = connect_to_database(HOME_REGION, "load_balancer")
+    menu_items = db.read_record(conn_menu, "catalogue")
 
     if same_region:
         user = db.read_record(conn, "users", f"user_id='{user_id}'")
