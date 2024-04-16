@@ -6,6 +6,8 @@ import time
 import requests
 from tabulate import tabulate
 import sys
+from threading import Thread
+
 
 if len(sys.argv) < 2:
     print("Please pass server_ip:port")
@@ -196,6 +198,94 @@ def get_user():
     print()
 
 
+def transaction_thread(payload, res):
+    response = requests.post(f"{BASE_URL}/transaction",
+        json=payload
+    )
+    res.append(response)
+
+
+def run_parallel_transactions():
+    user_id1 = input("Enter user 1 ID: ")
+    user_id2 = input("Enter user 2 ID: ")
+    group_id = input("Enter Group ID: ")
+
+    print("User 1 menu items")
+    items1 = []
+    while True:
+        item_id = input("Enter item ID (or type 'done' to finish): ")
+        if item_id.lower() == 'done':
+            break
+        quantity = int(input("Enter quantity: "))
+        items1.append({"item_id": int(item_id), "quantity": quantity})
+    
+    print("\nSelected items user 1:")
+    print(tabulate(items1, headers="keys", tablefmt="rounded_outline"))
+    print()
+
+    use_points1 = float(input("Redeem how many points: "))
+
+    print("User 2 menu items")
+    items2 = []
+    while True:
+        item_id = input("Enter item ID (or type 'done' to finish): ")
+        if item_id.lower() == 'done':
+            break
+        quantity = int(input("Enter quantity: "))
+        items2.append({"item_id": int(item_id), "quantity": quantity})
+    
+    print("\nSelected items user 2:")
+    print(tabulate(items2, headers="keys", tablefmt="rounded_outline"))
+    print()
+
+    use_points2 = float(input("Redeem how many points: "))
+
+    response1 = []
+    td1 = Thread(target=transaction_thread, args=({
+            "user_id": user_id1,
+            "group_id": group_id,
+            "items": items1,
+            "use_points": use_points1
+        }, response1))
+    
+    response2 = []
+    td2 = Thread(target=transaction_thread, args=({
+            "user_id": user_id2,
+            "group_id": group_id,
+            "items": items2,
+            "use_points": use_points2
+        }, response2))
+    td1.start()
+    td2.start()
+    td1.join()
+    td2.join()
+
+    print("User 1 result")
+    if response1[0].status_code != 200:
+        print("Error during transaction:", response1[0].text, response1[0].status_code)
+        return
+    data = response1[0].json()
+    print("Transaction successful with total") # points total_cost
+    print("  Total:", data["total_cost"])
+    if data["points"] >= 0:
+        print("  Points earned:", data["points"])
+    else:
+        print("  Points spent:", -data["points"])
+    print()
+
+    print("User 2 result")
+    if response2[0].status_code != 200:
+        print("Error during transaction:", response2[0].text, response2[0].status_code)
+        return
+    data = response2[0].json()
+    print("Transaction successful with total") # points total_cost
+    print("  Total:", data["total_cost"])
+    if data["points"] >= 0:
+        print("  Points earned:", data["points"])
+    else:
+        print("  Points spent:", -data["points"])
+    print()
+
 def run_scenario():
     """
     Run test scenario
@@ -296,7 +386,8 @@ def display_menu():
         ["7", "Get Group"],
         ["8", "Get User"],
         ["9", "Join a Group"],
-        ["10", "Run Scenario"],
+        ["10", "Run Scale Scenario"],
+        ["11", "Run Parallel transaction"],
         ["0", "Exit"]
     ]
     
@@ -335,6 +426,8 @@ def main():
                 join_group()
             elif choice == '10':
                 run_scenario()
+            elif choice == '11':
+                run_parallel_transactions()
             elif choice == '0':
                 break
         except KeyboardInterrupt:
